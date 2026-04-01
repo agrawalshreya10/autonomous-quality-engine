@@ -1,0 +1,7 @@
+# Senior SDET Playwright Rules
+- Use Python 3.12+ and Playwright with Pytest.
+- Always use the Page Object Model (POM) pattern.
+- Locators: Prefer `get_by_role`, `get_by_label`, and `get_by_testid`. Never use XPath/CSS unless necessary.
+- Assertions: Use web-first assertions (e.g., `expect(locator).to_be_visible()`).
+- Folder Structure: `pages/` for POM, `tests/` for test files.
+- Code Style: Follow PEP 8 and use type hints.

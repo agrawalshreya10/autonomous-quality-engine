@@ -1,0 +1,13 @@
+# Test framework
+playwright>=1.40.0
+pytest>=7.4.0
+pytest-html>=4.1.0
+pytest-xdist>=3.5.0
+
+# Config
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# Optional: Allure (uncomment when needed)
+# allure-pytest>=2.13.0

@@ -1,0 +1,79 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - run: pip install -r requirements.txt
+      - run: playwright install --with-deps chromium
+      - run: |
+          mkdir -p reports/screenshots
+          pytest tests/ -m smoke -v --tb=short --html=reports/report.html --self-contained-html
+        env:
+          HEADLESS: "true"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-report
+          path: reports/
+          retention-days: 7
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: playwright install --with-deps chromium
+
+      - name: Run tests
+        run: |
+          mkdir -p reports/screenshots
+          pytest tests/ -n auto -v --tb=short --html=reports/report.html --self-contained-html
+        env:
+          HEADLESS: "true"
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-report-${{ matrix.python-version }}
+          path: reports/
+          retention-days: 14
+
+      - name: Summary on failure
+        if: failure()
+        run: |
+          echo "## Tests failed" >> $GITHUB_STEP_SUMMARY
+          echo "Download the **test-report** artifact to view the HTML report and screenshots." >> $GITHUB_STEP_SUMMARY
+          echo "To get AI fix suggestions locally, run:" >> $GITHUB_STEP_SUMMARY
+          echo '  python -m ai_audit.failure_analyzer --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY

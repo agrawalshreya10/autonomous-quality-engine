@@ -1,0 +1,28 @@
+[project]
+name = "orangehrm-playwright"
+version = "0.1.0"
+description = "Enterprise OrangeHRM test suite with Playwright (Python), POM, and AI audit"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "playwright>=1.40.0",
+    "pytest>=7.4.0",
+    "pytest-html>=4.1.0",
+    "pytest-xdist>=3.5.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+# Run parallel: pytest -n auto (or -n 4). Fixtures are function-scoped for isolation.
+addopts = "-v --tb=short --html=reports/report.html --self-contained-html"
+markers = [
+    "smoke: smoke tests (quick sanity)",
+    "regression: full regression suite",
+    "pim: PIM module tests",
+    "leave: Leave module tests",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
