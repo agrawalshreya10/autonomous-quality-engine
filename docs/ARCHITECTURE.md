@@ -2,7 +2,13 @@
 
 ## Project Overview
 An Enterprise-Grade automation framework for OrangeHRM, designed for a Senior SDET portfolio. 
-- **Target Environment**: Local MAMP server (`http://localhost:8888/orangehrm`) and Public Demo.
+
+## Target Environment
+- **Local Development**: Hosted on a MAMP server mapped to `http://ohrm.test`.
+- **Database**: Local MySQL instance managed via MAMP.
+- **AI Audit (Planned)**: Integration with local Ollama for private log analysis, transitioning to Gemini API for advanced cloud-based failure auditing.
+
+## Tools
 - **Tech Stack**: Python, Playwright, Pytest, Gemini AI (for Audit).
 
 ## System Design
@@ -19,4 +25,4 @@ An Enterprise-Grade automation framework for OrangeHRM, designed for a Senior SD
 1. **Dockerization**: Containerize the execution for GitHub Actions compatibility.
 2. **Dynamic Data**: Transition from static JSON to runtime data generation using Faker.
 3. **CI/CD**: Implementation of YAML-based pipelines for automated regression.
-3. Implementation Step
+4. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
