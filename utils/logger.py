@@ -2,7 +2,7 @@
 
 import logging
 import sys
-from typing import Any
+from datetime import datetime
 
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 
@@ -16,3 +16,24 @@ def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
         logger.addHandler(handler)
         logger.setLevel(level)
     return logger
+
+
+def get_interaction_logger(name: str) -> logging.Logger:
+    """
+    Logger that prints one line per message (no duplicate timestamp from parent format).
+    Used for [TIMESTAMP] [INFO] Performed ... lines.
+    """
+    logger = logging.getLogger(f"orangehrm.interaction.{name}")
+    if not logger.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+        logger.propagate = False
+    return logger
+
+
+def log_interaction(logger: logging.Logger, action: str, element: str) -> None:
+    """Log: [TIMESTAMP] [INFO] Performed {action} on {element}."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger.info("[%s] [INFO] Performed %s on %s.", ts, action, element)

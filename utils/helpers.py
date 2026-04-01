@@ -1,8 +1,16 @@
-"""Test helpers: data generation, date utils, etc."""
+"""Test helpers: data generation, date utils, selector labels for logs, etc."""
 
 import random
 import string
-from datetime import datetime, timedelta
+from datetime import datetime
+
+
+def truncate_for_log(text: str, max_len: int = 100) -> str:
+    """Shorten long selectors/URLs for log lines."""
+    t = text.strip()
+    if len(t) <= max_len:
+        return t
+    return f"{t[: max_len - 3]}..."
 
 
 def random_string(length: int = 8, prefix: str = "") -> str:

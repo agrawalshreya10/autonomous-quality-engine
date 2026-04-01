@@ -1,6 +1,6 @@
 # OrangeHRM Playwright — project status
 
-**Last updated:** 2026-03-27 (config: `BASE_URL` normalization, `IGNORE_HTTPS_ERRORS`; smoke login tests use `page_factory.settings` for URL/credentials via env)
+**Last updated:** 2026-03-27 — BasePage: interaction logging (`[TIMESTAMP] [INFO] Performed {action} on {element}.`), `get_resilient_locator`, `expect()` on click/fill; `LoginPage` uses resilient selectors + `BasePage` fill/click; `utils.helpers.truncate_for_log`.
 
 This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly.
 
@@ -59,7 +59,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 | Area | Notes |
 |------|--------|
 | **Browser lifecycle** (`core/driver.py`) | Chromium / Firefox / WebKit launch, context with `base_url`, timeouts |
-| **POM** (`core/base_page.py`, `core/page_factory.py`) | Common actions, cached page factory |
+| **POM** (`core/base_page.py`, `core/page_factory.py`) | Common actions, cached page factory, interaction logs, resilient `or_` locators, `expect` before click/fill |
 | **Config** (`config/settings.py`) | Pydantic settings, env / `.env` |
 | **Pages** | Login, dashboard, PIM (employee list + add employee), leave list |
 | **Tests** | 3 smoke + 5 regression (PIM + leave) |
@@ -75,9 +75,9 @@ There are no `TODO` / `FIXME` markers in first-party project code under `core/`,
 
 1. **Coverage vs. README** — Only a subset of OrangeHRM flows is covered. Other modules (admin, recruitment, time, performance, etc.) are not implemented.
 
-2. **`utils/`** — `logger.py` and `helpers.py` exist but are **not imported** by tests or pages yet.
+2. **`utils/`** — `logger` (`log_interaction`, `get_interaction_logger`) and `helpers.truncate_for_log` are **used by `BasePage`** (navigate / click / fill). Regression pages can adopt `BasePage.fill` / `click` for the same logs.
 
-3. **`ai_audit/client.py`** — Abstract `LLMClient`; **only Ollama** is implemented.
+3. **`ai_audit/client.py`** — Abstract `LLMClient`; **only Ollama** is implemented (optional: add OpenAI or other backends later).
 
 4. **Test rigor** — Some assertions are loose (e.g. PIM search allows zero rows; add-employee uses fixed names).
 

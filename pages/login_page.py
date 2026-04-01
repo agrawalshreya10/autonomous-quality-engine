@@ -1,6 +1,6 @@
 """Login page object for OrangeHRM."""
 
-from playwright.sync_api import Page
+from playwright.sync_api import Locator, Page
 
 from config.settings import Settings
 from core.base_page import BasePage
@@ -13,18 +13,18 @@ class LoginPage(BasePage):
     def __init__(self, page: Page, settings: Settings) -> None:
         super().__init__(page, settings, path="web/index.php/auth/login")
 
-    # Locators (OrangeHRM 5.x)
+    # Locators (OrangeHRM 5.x + legacy ids for self-healing on local / ohrm.test)
     @property
-    def username_input(self):
-        return self._page.locator('input[name="username"]')
+    def username_input(self) -> Locator:
+        return self.get_resilient_locator('input[name="username"]', "#txtUsername")
 
     @property
-    def password_input(self):
-        return self._page.locator('input[name="password"]')
+    def password_input(self) -> Locator:
+        return self.get_resilient_locator('input[name="password"]', "#txtPassword")
 
     @property
-    def login_button(self):
-        return self._page.locator('button[type="submit"]')
+    def login_button(self) -> Locator:
+        return self.get_resilient_locator('button[type="submit"]', "#btnLogin")
 
     @property
     def error_message(self):
@@ -33,9 +33,9 @@ class LoginPage(BasePage):
     def login(self, username: str, password: str) -> DashboardPage:
         """Enter credentials, click Login, return Dashboard page object."""
         self.navigate()
-        self.username_input.fill(username)
-        self.password_input.fill(password)
-        self.login_button.click()
+        self.fill(self.username_input, username, element_label="username")
+        self.fill(self.password_input, password, element_label="password")
+        self.click(self.login_button, element_label="login")
         return DashboardPage(self._page, self._settings)
 
     def get_error_text(self) -> str:
