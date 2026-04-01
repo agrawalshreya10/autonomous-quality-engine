@@ -1,7 +1,22 @@
-# Senior SDET Playwright Rules
-- Use Python 3.12+ and Playwright with Pytest.
-- Always use the Page Object Model (POM) pattern.
-- Locators: Prefer `get_by_role`, `get_by_label`, and `get_by_testid`. Never use XPath/CSS unless necessary.
-- Assertions: Use web-first assertions (e.g., `expect(locator).to_be_visible()`).
-- Folder Structure: `pages/` for POM, `tests/` for test files.
-- Code Style: Follow PEP 8 and use type hints.
+# Playwright Rules - Enterpris-Grade SDET Standards
+
+- **Environment**: Python 3.12+, Playwright with Pytest. Run via `.venv/bin/pytest`.
+- **Architecture**: POM pattern. Pages in `pages/`, Tests in `tests/`. Follow PEP 8 with Type Hints.
+- **Locators & Resilience**: 
+    - Prefer `get_by_role`, `get_by_label`, `get_by_testid`. Avoid XPath/CSS.
+    - Use `.or()` for critical path locators (Login, Save, Submit) to ensure self-healing.
+- **Sync & Assertions**: 
+    - Use `expect(locator)` for UI states (Web-First Assertions).
+    - NEVER use `page.wait_for_timeout()`. 
+    - Use standard `assert` only for non-UI logic (API/DB).
+- **Logging & Error Handling**: 
+    - Log at the START of every action via `@utils/logger.py`.
+    - Every Page method must use try-except; log the error then **re-raise** to fail the test.
+- **Data Strategy**: 
+    - Pull static data from `@data/`. 
+    - Use `@utils/helpers.py` or `Faker` for runtime data (names, IDs). 
+    - No hardcoded strings in test steps.
+- **Execution Strategy**: 
+    - **Atomic**: Tests must be independent. Use `conftest.py` for setup/teardown.
+    - **Docker Ready**: Reference `BASE_URL` from config; assume parallel execution.
+- **AI-Driven Debugging**: On failure, prioritize using `@ai_audit/failure_analyzer.py` to analyze the generated Playwright trace.
