@@ -1,13 +1,16 @@
 """Base page with common actions and waits for all page objects."""
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 from playwright.sync_api import Locator, Page, expect
 
 from config.settings import Settings
 from utils.helpers import truncate_for_log
-from utils.logger import get_interaction_logger, log_interaction
+from utils.logger import get_interaction_logger, get_logger, log_interaction
+
+T = TypeVar("T")
 
 
 class BasePage:
@@ -18,6 +21,19 @@ class BasePage:
         self._settings = settings
         self._path = path.strip("/")
         self._interaction_log = get_interaction_logger(self.__class__.__name__)
+        self._error_logger = get_logger(f"page.{self.__class__.__name__}")
+
+    def _run(self, action: str, context: str, fn: Callable[[], T]) -> T:
+        """Run a page action; on failure log the error with traceback and re-raise (.cursorrules)."""
+        try:
+            return fn()
+        except Exception:
+            self._error_logger.exception(
+                "Failed during %s on %s",
+                action,
+                context,
+            )
+            raise
 
     @property
     def page(self) -> Page:
@@ -32,7 +48,12 @@ class BasePage:
         Self-healing locator: match primary selector, or fallback if the DOM differs
         (e.g. MAMP / ohrm.test vs hosted demo).
         """
-        return self._page.locator(primary_selector).or_(self._page.locator(fallback_selector))
+        ctx = f"{truncate_for_log(primary_selector)} | {truncate_for_log(fallback_selector)}"
+
+        def _build() -> Locator:
+            return self._page.locator(primary_selector).or_(self._page.locator(fallback_selector))
+
+        return self._run("get_resilient_locator", ctx, _build)
 
     @staticmethod
     def _resolve_locator(page: Page, locator: Locator | str) -> Locator:
@@ -54,7 +75,11 @@ class BasePage:
         p = path.strip("/") if path else self._path
         url = f"{self.base_url}/{p}" if p else self.base_url
         log_interaction(self._interaction_log, "navigate", truncate_for_log(url))
-        self._page.goto(url, wait_until="domcontentloaded")
+
+        def _goto() -> None:
+            self._page.goto(url, wait_until="domcontentloaded")
+
+        self._run("navigate", truncate_for_log(url), _goto)
 
     def click(
         self,
@@ -67,9 +92,13 @@ class BasePage:
         label = self._element_label(locator, element_label)
         log_interaction(self._interaction_log, "click", label)
         timeout = self._settings.timeout_ms
-        expect(el).to_be_visible(timeout=timeout)
-        expect(el).to_be_enabled(timeout=timeout)
-        el.click(**kwargs)
+
+        def _click() -> None:
+            expect(el).to_be_visible(timeout=timeout)
+            expect(el).to_be_enabled(timeout=timeout)
+            el.click(**kwargs)
+
+        self._run("click", label, _click)
 
     def fill(
         self,
@@ -83,28 +112,60 @@ class BasePage:
         label = self._element_label(locator, element_label)
         log_interaction(self._interaction_log, "fill", label)
         timeout = self._settings.timeout_ms
-        expect(el).to_be_visible(timeout=timeout)
-        expect(el).to_be_editable(timeout=timeout)
-        el.fill(value, **kwargs)
+
+        def _fill() -> None:
+            expect(el).to_be_visible(timeout=timeout)
+            expect(el).to_be_editable(timeout=timeout)
+            el.fill(value, **kwargs)
+
+        self._run("fill", label, _fill)
 
     def get_text(self, locator: Locator | str) -> str:
         el = self._resolve_locator(self._page, locator)
-        return el.inner_text()
+        label = self._element_label(locator, None)
+
+        def _text() -> str:
+            return el.inner_text()
+
+        return self._run("get_text", label, _text)
 
     def wait_for_visible(self, locator: Locator | str, timeout_ms: int | None = None) -> None:
         el = self._resolve_locator(self._page, locator)
-        el.wait_for(state="visible", timeout=timeout_ms or self._settings.timeout_ms)
+        label = self._element_label(locator, None)
+        t = timeout_ms or self._settings.timeout_ms
+
+        def _wait() -> None:
+            el.wait_for(state="visible", timeout=t)
+
+        self._run("wait_for_visible", label, _wait)
 
     def wait_for_load_state(self, state: str = "networkidle") -> None:
-        self._page.wait_for_load_state(state)
+        def _wait() -> None:
+            self._page.wait_for_load_state(state)
+
+        self._run("wait_for_load_state", state, _wait)
 
     def wait_for_url(self, pattern: str | None = None, timeout_ms: int | None = None) -> None:
-        self._page.wait_for_url(url=pattern, timeout=timeout_ms or self._settings.timeout_ms)
+        ctx = pattern or ""
+
+        def _wait() -> None:
+            self._page.wait_for_url(url=pattern, timeout=timeout_ms or self._settings.timeout_ms)
+
+        self._run("wait_for_url", ctx, _wait)
 
     def screenshot(self, name: str, path: str | Path | None = None) -> bytes:
         out = path or f"reports/screenshots/{name}.png"
-        return self._page.screenshot(path=out)
+
+        def _shot() -> bytes:
+            return self._page.screenshot(path=out)
+
+        return self._run("screenshot", str(name), _shot)
 
     def is_visible(self, locator: Locator | str) -> bool:
         el = self._resolve_locator(self._page, locator)
-        return el.is_visible()
+        label = self._element_label(locator, None)
+
+        def _vis() -> bool:
+            return el.is_visible()
+
+        return self._run("is_visible", label, _vis)
