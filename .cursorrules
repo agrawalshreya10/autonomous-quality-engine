@@ -1,22 +1,29 @@
-# Playwright Rules - Enterpris-Grade SDET Standards
+# Playwright Rules — Enterprise-Grade Code Standards
 
-- **Environment**: Python 3.12+, Playwright with Pytest. Run via `.venv/bin/pytest`.
-- **Architecture**: POM pattern. Pages in `pages/`, Tests in `tests/`. Follow PEP 8 with Type Hints.
+- **Environment**: 
+    - Python 3.12+, Playwright with Pytest. Execute via `.venv/bin/pytest`.
+- **Architecture**: 
+    - Strict POM pattern. Pages in `pages/`, Components in `pages/components/`, Tests in `tests/`. Follow PEP 8 with Type Hints.
 - **Locators & Resilience**: 
-    - Prefer `get_by_role`, `get_by_label`, `get_by_testid`. Avoid XPath/CSS.
-    - Use `.or()` for critical path locators (Login, Save, Submit) to ensure self-healing.
+    - Prioritize `get_by_role`, `get_by_label`, `get_by_testid`. Avoid XPath/CSS.
+    - Mandatory `.or()` pattern for critical path locators (Login, Save, Submit) to ensure self-healing.
 - **Sync & Assertions**: 
-    - Use `expect(locator)` for UI states (Web-First Assertions).
+    - Use `expect(locator)` for all UI states (Web-First Assertions).
     - NEVER use `page.wait_for_timeout()`. 
     - Use standard `assert` only for non-UI logic (API/DB).
-- **Logging & Error Handling**: 
-    - Log at the START of every action via `@utils/logger.py`.
-    - Every Page method must use try-except; log the error then **re-raise** to fail the test.
+- **Logging & Interactions**: 
+    - Use `self.click()` and `self.fill()` from `@core/base_page.py`.
+    - Mandatory `element_label` parameter for every interaction (e.g., `element_label="Login Button"`).
+    - Log at the START of every action via `@utils/logger.py`.  
+- **Error Handling**: 
+    - Every Page method must use try-except; log the error via logger, then **re-raise** to ensure test failure.
 - **Data Strategy**: 
-    - Pull static data from `@data/`. 
-    - Use `@utils/helpers.py` or `Faker` for runtime data (names, IDs). 
+    - Pull static data (if any) from `@data/testdata.json` or something similar. 
+    - Use `@utils/helpers.py` or `@utils/generate_test_data.py` or `Faker` for runtime data (names, IDs). 
     - No hardcoded strings in test steps.
 - **Execution Strategy**: 
     - **Atomic**: Tests must be independent. Use `conftest.py` for setup/teardown.
     - **Docker Ready**: Reference `BASE_URL` from config; assume parallel execution.
-- **AI-Driven Debugging**: On failure, prioritize using `@ai_audit/failure_analyzer.py` to analyze the generated Playwright trace.
+- **AI-Driven Debugging**: 
+    - On failure, prioritize using `@ai_audit/failure_analyzer.py` to analyze the generated Playwright trace.
+    - **Context Awareness**: Refer to @docs/STATUS.md for project progress and @docs/ARCHITECTURE.md for system design.
