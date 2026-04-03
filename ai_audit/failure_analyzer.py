@@ -11,6 +11,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from ai_audit.client import LLMClient
+from ai_audit.gemini_client import GeminiClient
 from ai_audit.ollama_client import OllamaClient
 
 
@@ -69,11 +71,23 @@ def _read_failures_from_artifacts(artifacts_dir: Path) -> list[tuple[str, str, s
     return results
 
 
+def _make_client(kind: str, model: str) -> LLMClient:
+    if kind == "gemini":
+        return GeminiClient(model=model)
+    return OllamaClient(model=model)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Analyze test failures with local LLM (Ollama)")
+    parser = argparse.ArgumentParser(description="Analyze test failures with Ollama (local) or Gemini (cloud)")
     parser.add_argument("--artifacts-dir", type=Path, default=Path("."), help="Directory containing reports/ and optionally failures.txt")
     parser.add_argument("--failures", type=Path, help="Path to failures file (TEST: / MESSAGE: format)")
-    parser.add_argument("--model", default="llama3.2", help="Ollama model name")
+    parser.add_argument(
+        "--client",
+        choices=("ollama", "gemini"),
+        default="ollama",
+        help="LLM backend (Gemini requires GEMINI_API_KEY)",
+    )
+    parser.add_argument("--model", default="llama3.2", help="Model name (Ollama: llama3.2 / Gemini: gemini-1.5-flash)")
     parser.add_argument("--out", type=Path, help="Write suggestions to file")
     args = parser.parse_args()
 
@@ -86,7 +100,7 @@ def main() -> int:
         print("No failures found. Create failures.txt with TEST: and MESSAGE: lines, or run tests and pass --artifacts-dir to the directory with reports/report.html.", file=sys.stderr)
         return 1
 
-    client = OllamaClient(model=args.model)
+    client = _make_client(args.client, args.model)
     output_lines: list[str] = []
     for test_name, message, screenshot_path in failures:
         out = client.suggest_fix(

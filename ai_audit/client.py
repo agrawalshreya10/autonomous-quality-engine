@@ -1,4 +1,4 @@
-"""Abstract LLM client for failure analysis. Implementations: Ollama, OpenAI, etc."""
+"""Abstract LLM client for failure analysis. Implementations: Ollama, Gemini."""
 
 from abc import ABC, abstractmethod
 

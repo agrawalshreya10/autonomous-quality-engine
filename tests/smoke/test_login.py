@@ -41,5 +41,5 @@ def test_login_then_logout(page_factory):
     dashboard = login_page.login(settings.orangehrm_user, settings.orangehrm_password)
     assert dashboard.is_loaded()
     dashboard.logout()
-    login_page._page.wait_for_url("**/auth/login**", timeout=settings.timeout_ms)
+    login_page.wait_for_url("**/auth/login**", timeout_ms=settings.timeout_ms)
     assert login_page.is_login_page_visible()

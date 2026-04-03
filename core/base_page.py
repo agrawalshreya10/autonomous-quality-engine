@@ -55,42 +55,58 @@ class BasePage:
 
         return self._run("get_resilient_locator", ctx, _build)
 
+    def get_resilient_role_button(self, name: str, fallback_selector: str) -> Locator:
+        """Critical path: role button + CSS/text fallback (.or_ pattern)."""
+        ctx = f'button[name="{name}"] | {truncate_for_log(fallback_selector)}'
+
+        def _build() -> Locator:
+            return self._page.get_by_role("button", name=name).or_(self._page.locator(fallback_selector))
+
+        return self._run("get_resilient_locator", ctx, _build)
+
+    def get_resilient_role_menuitem(self, name: str, fallback_selector: str) -> Locator:
+        """Critical path: role menuitem + CSS fallback (.or_ pattern)."""
+        ctx = f'menuitem[name="{name}"] | {truncate_for_log(fallback_selector)}'
+
+        def _build() -> Locator:
+            return self._page.get_by_role("menuitem", name=name).or_(self._page.locator(fallback_selector))
+
+        return self._run("get_resilient_locator", ctx, _build)
+
+    def get_resilient_placeholder(self, primary_placeholder: str, fallback_placeholder: str) -> Locator:
+        """Two placeholder variants (e.g. search hints on different builds)."""
+        ctx = f"placeholder | {truncate_for_log(primary_placeholder)} | {truncate_for_log(fallback_placeholder)}"
+
+        def _build() -> Locator:
+            return self._page.get_by_placeholder(primary_placeholder).first.or_(
+                self._page.get_by_placeholder(fallback_placeholder)
+            )
+
+        return self._run("get_resilient_locator", ctx, _build)
+
     @staticmethod
     def _resolve_locator(page: Page, locator: Locator | str) -> Locator:
         return page.locator(locator) if isinstance(locator, str) else locator
-
-    def _element_label(
-        self,
-        locator: Locator | str,
-        element_label: str | None,
-    ) -> str:
-        if element_label:
-            return element_label
-        if isinstance(locator, str):
-            return truncate_for_log(locator)
-        return "locator"
 
     def navigate(self, path: str = "") -> None:
         """Navigate to base_url + path. Path can start with / or be relative."""
         p = path.strip("/") if path else self._path
         url = f"{self.base_url}/{p}" if p else self.base_url
-        log_interaction(self._interaction_log, "navigate", truncate_for_log(url))
 
         def _goto() -> None:
             self._page.goto(url, wait_until="domcontentloaded")
 
         self._run("navigate", truncate_for_log(url), _goto)
+        log_interaction(self._interaction_log, "navigate", truncate_for_log(url))
 
     def click(
         self,
         locator: Locator | str,
         *,
-        element_label: str | None = None,
+        element_label: str,
         **kwargs: Any,
     ) -> None:
         el = self._resolve_locator(self._page, locator)
-        label = self._element_label(locator, element_label)
-        log_interaction(self._interaction_log, "click", label)
         timeout = self._settings.timeout_ms
 
         def _click() -> None:
@@ -98,19 +114,18 @@ class BasePage:
             expect(el).to_be_enabled(timeout=timeout)
             el.click(**kwargs)
 
-        self._run("click", label, _click)
+        self._run("click", element_label, _click)
+        log_interaction(self._interaction_log, "click", element_label)
 
     def fill(
         self,
         locator: Locator | str,
         value: str,
         *,
-        element_label: str | None = None,
+        element_label: str,
         **kwargs: Any,
     ) -> None:
         el = self._resolve_locator(self._page, locator)
-        label = self._element_label(locator, element_label)
-        log_interaction(self._interaction_log, "fill", label)
         timeout = self._settings.timeout_ms
 
         def _fill() -> None:
@@ -118,26 +133,25 @@ class BasePage:
             expect(el).to_be_editable(timeout=timeout)
             el.fill(value, **kwargs)
 
-        self._run("fill", label, _fill)
+        self._run("fill", element_label, _fill)
+        log_interaction(self._interaction_log, "fill", element_label)
 
-    def get_text(self, locator: Locator | str) -> str:
+    def get_text(self, locator: Locator | str, *, element_label: str) -> str:
         el = self._resolve_locator(self._page, locator)
-        label = self._element_label(locator, None)
 
         def _text() -> str:
             return el.inner_text()
 
-        return self._run("get_text", label, _text)
+        return self._run("get_text", element_label, _text)
 
-    def wait_for_visible(self, locator: Locator | str, timeout_ms: int | None = None) -> None:
+    def wait_for_visible(self, locator: Locator | str, *, element_label: str, timeout_ms: int | None = None) -> None:
         el = self._resolve_locator(self._page, locator)
-        label = self._element_label(locator, None)
         t = timeout_ms or self._settings.timeout_ms
 
         def _wait() -> None:
             el.wait_for(state="visible", timeout=t)
 
-        self._run("wait_for_visible", label, _wait)
+        self._run("wait_for_visible", element_label, _wait)
 
     def wait_for_load_state(self, state: str = "networkidle") -> None:
         def _wait() -> None:
@@ -161,11 +175,27 @@ class BasePage:
 
         return self._run("screenshot", str(name), _shot)
 
-    def is_visible(self, locator: Locator | str) -> bool:
+    def is_visible(self, locator: Locator | str, *, element_label: str) -> bool:
         el = self._resolve_locator(self._page, locator)
-        label = self._element_label(locator, None)
 
         def _vis() -> bool:
             return el.is_visible()
 
-        return self._run("is_visible", label, _vis)
+        return self._run("is_visible", element_label, _vis)
+
+    def count_locator_matches(self, selector: str, *, element_label: str) -> int:
+        """Count elements matching a selector (e.g. table rows)."""
+
+        def _count() -> int:
+            return self._page.locator(selector).count()
+
+        return self._run("locator_count", element_label, _count)
+
+    def locator_nth(self, selector: str, index: int, *, element_label: str) -> Locator:
+        """Nth match for a selector (e.g. grid inputs)."""
+        ctx = f"{truncate_for_log(selector)}[{index}]"
+
+        def _build() -> Locator:
+            return self._page.locator(selector).nth(index)
+
+        return self._run("locator_nth", ctx, _build)
