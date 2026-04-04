@@ -94,9 +94,9 @@ class BasePage:
         ctx = f"placeholder | {truncate_for_log(primary_placeholder)} | {truncate_for_log(fallback_placeholder)}"
 
         def _build() -> Locator:
-            return self._page.get_by_placeholder(primary_placeholder).first.or_(
+            return self._page.get_by_placeholder(primary_placeholder).or_(
                 self._page.get_by_placeholder(fallback_placeholder)
-            )
+            ).first
 
         return self._run("get_resilient_locator", ctx, _build)
 
