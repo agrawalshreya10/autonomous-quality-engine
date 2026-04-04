@@ -40,6 +40,9 @@ playwright-report/
 *.trace
 *.zip
 
+# Cursor (local notes, business secrets, future plans, temporary files, AI skills — not shipped)
+.cursor/
+
 # IDE
 .idea/
 .vscode/

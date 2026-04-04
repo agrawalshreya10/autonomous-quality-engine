@@ -8,6 +8,7 @@ Or with a failures file:
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -71,10 +72,27 @@ def _read_failures_from_artifacts(artifacts_dir: Path) -> list[tuple[str, str, s
     return results
 
 
-def _make_client(kind: str, model: str) -> LLMClient:
-    if kind == "gemini":
-        return GeminiClient(model=model)
-    return OllamaClient(model=model)
+def _resolve_client(kind: str) -> str:
+    if kind != "auto":
+        return kind
+    # Default behavior: local -> Ollama, CI with API key -> Gemini.
+    if os.environ.get("GITHUB_ACTIONS") == "true" and os.environ.get("GEMINI_API_KEY"):
+        return "gemini"
+    return "ollama"
+
+
+def _resolve_model(kind: str, model: str | None) -> str:
+    if model:
+        return model
+    return "gemini-1.5-flash" if kind == "gemini" else "llama3.2"
+
+
+def _make_client(kind: str, model: str | None) -> LLMClient:
+    resolved_kind = _resolve_client(kind)
+    resolved_model = _resolve_model(resolved_kind, model)
+    if resolved_kind == "gemini":
+        return GeminiClient(model=resolved_model)
+    return OllamaClient(model=resolved_model)
 
 
 def main() -> int:
@@ -83,11 +101,15 @@ def main() -> int:
     parser.add_argument("--failures", type=Path, help="Path to failures file (TEST: / MESSAGE: format)")
     parser.add_argument(
         "--client",
-        choices=("ollama", "gemini"),
-        default="ollama",
-        help="LLM backend (Gemini requires GEMINI_API_KEY)",
+        choices=("auto", "ollama", "gemini"),
+        default="auto",
+        help="LLM backend (auto: local Ollama, CI+key Gemini)",
     )
-    parser.add_argument("--model", default="llama3.2", help="Model name (Ollama: llama3.2 / Gemini: gemini-1.5-flash)")
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Optional model override (Ollama default: llama3.2, Gemini default: gemini-1.5-flash)",
+    )
     parser.add_argument("--out", type=Path, help="Write suggestions to file")
     args = parser.parse_args()
 

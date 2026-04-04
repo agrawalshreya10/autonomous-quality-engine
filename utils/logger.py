@@ -37,3 +37,16 @@ def log_interaction(logger: logging.Logger, action: str, element: str) -> None:
     """Log: [TIMESTAMP] [INFO] Performed {action} on {element}."""
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logger.info("[%s] [INFO] Performed %s on %s.", ts, action, element)
+
+
+def log_interaction_start(logger: logging.Logger, action: str, element: str) -> None:
+    """Log action start before UI operation executes."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger.info("[%s] [INFO] Starting %s on %s.", ts, action, element)
+
+
+def log_interaction_result(logger: logging.Logger, action: str, element: str, *, success: bool) -> None:
+    """Log action outcome after execution attempt."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    outcome = "succeeded" if success else "failed"
+    logger.info("[%s] [INFO] %s %s on %s.", ts, action.capitalize(), outcome, element)

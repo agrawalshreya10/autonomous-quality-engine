@@ -8,7 +8,12 @@ from playwright.sync_api import Locator, Page, expect
 
 from config.settings import Settings
 from utils.helpers import truncate_for_log
-from utils.logger import get_interaction_logger, get_logger, log_interaction
+from utils.logger import (
+    get_interaction_logger,
+    get_logger,
+    log_interaction_result,
+    log_interaction_start,
+)
 
 T = TypeVar("T")
 
@@ -33,6 +38,17 @@ class BasePage:
                 action,
                 context,
             )
+            raise
+
+    def _run_logged(self, action: str, context: str, fn: Callable[[], T]) -> T:
+        """Log start and truthful outcome around an action execution."""
+        log_interaction_start(self._interaction_log, action, context)
+        try:
+            result = self._run(action, context, fn)
+            log_interaction_result(self._interaction_log, action, context, success=True)
+            return result
+        except Exception:
+            log_interaction_result(self._interaction_log, action, context, success=False)
             raise
 
     @property
@@ -96,8 +112,7 @@ class BasePage:
         def _goto() -> None:
             self._page.goto(url, wait_until="domcontentloaded")
 
-        self._run("navigate", truncate_for_log(url), _goto)
-        log_interaction(self._interaction_log, "navigate", truncate_for_log(url))
+        self._run_logged("navigate", truncate_for_log(url), _goto)
 
     def click(
         self,
@@ -114,8 +129,7 @@ class BasePage:
             expect(el).to_be_enabled(timeout=timeout)
             el.click(**kwargs)
 
-        self._run("click", element_label, _click)
-        log_interaction(self._interaction_log, "click", element_label)
+        self._run_logged("click", element_label, _click)
 
     def fill(
         self,
@@ -133,8 +147,7 @@ class BasePage:
             expect(el).to_be_editable(timeout=timeout)
             el.fill(value, **kwargs)
 
-        self._run("fill", element_label, _fill)
-        log_interaction(self._interaction_log, "fill", element_label)
+        self._run_logged("fill", element_label, _fill)
 
     def get_text(self, locator: Locator | str, *, element_label: str) -> str:
         el = self._resolve_locator(self._page, locator)
