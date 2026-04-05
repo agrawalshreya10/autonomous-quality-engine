@@ -11,8 +11,25 @@ An Enterprise-Grade automation framework for OrangeHRM, designed for a Senior SD
 ## Tools
 - **Tech Stack**: Python, Playwright, Pytest, Gemini AI (for Audit).
 
+## Playwright Component Testing (reference — 2026)
+
+Official Playwright **component tests** are **experimental**, run on the **Node.js** toolchain, and target **UI framework bundles** (e.g. `@playwright/experimental-ct-react`, `@playwright/experimental-ct-vue`). They are **not** the same as this repo’s **Python E2E** suite. Use this section when deciding whether to add CT alongside E2E.
+
+**Current best practices (aligned with [Playwright component testing docs](https://playwright.dev/docs/test-components)):**
+
+- **Isolation via `mount`:** Tests use the `mount` fixture to render a component in a real browser; `mount` returns a **locator scoped to the component** — assert and interact through that locator like any Playwright test.
+- **User-centric assertions:** Prefer **accessibility-oriented** selectors (`getByRole`, `getByLabel`, alt text) and visible outcomes. **Do not** reach into component instances or internal methods from tests; that couples tests to implementation and contradicts Playwright’s guidance.
+- **Stories / test wrappers:** For props that cannot cross the Node/browser boundary (complex objects, synchronous Node callbacks), use **wrapper components or story modules** that adapt props to plain serializable values — the documented “story file” pattern.
+- **Hooks:** Use `beforeMount` / `afterMount` (and `hooksConfig` where needed) in `playwright/index.*` for **theme, router, global providers** (e.g. Pinia testing setup) so each test gets a controlled environment.
+- **Lifecycle:** Use **`unmount`** and **`update`** when testing teardown, prop updates, and parent-driven re-renders.
+- **Network:** Use the experimental **`router`** fixture (and optionally **MSW** handlers) to mock APIs during CT — same stability principles as E2E network mocking.
+- **Bundling & config:** CT uses **Vite** under the hood; align **`ctViteConfig`** (aliases, plugins) with your app’s build when they diverge — Playwright does not automatically reuse your full Vite config.
+- **Observability:** Reuse standard Playwright Test settings: **parallel runs**, **tracing** / reporting as configured — CT shares the same post-failure debugging story as E2E.
+- **Naming clarity:** This repository’s `pages/components/` directory is the **Page Object Model** place for **reusable page pieces** in **Python**, **not** Playwright CT source. If OrangeHRM (or a separate front-end) gains JS CT, colocate CT specs with the component bundle (e.g. `*.spec.tsx`) per Playwright’s layout, or add a dedicated package — do not conflate POM “components” with `@playwright/experimental-ct-*` unless explicitly adopted.
+
 ## System Design
-- **BasePage Core**: Centralized logic for logging, resilient locators, and web-first assertions.
+- **BasePage Core**: Centralized logic for logging, resilient locators, and web-first assertions. **Locator + interaction-log behavior (including `.first` / `.or_()` semantics and when to log “Performed”) is decided in** [docs/decisions/playwright-locators-and-logging.md](decisions/playwright-locators-and-logging.md) — use that doc as the default checklist before changing DOM-related code.
+- **DOM verification**: Prefer **Playwright MCP** (`.cursor/mcp.json`, `@playwright/mcp`) in Cursor for live structure checks; pair with traces and tests for failures.
 - **Hybrid Locator Strategy**: 
     - Page-specific locators stay inside their respective Classes.
     - Shared/Global locators (Navbars, Logout) are stored in `core/constants.py`.

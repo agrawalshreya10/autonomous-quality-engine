@@ -1,6 +1,6 @@
 # OrangeHRM Playwright — project status
 
-**Last updated:** 2026-04-01 — Swapped `OpenAIClient` for `GeminiClient` (`gemini-1.5-flash`); `failure_analyzer --client gemini`; ARCHITECTURE.md roadmap updated with CodeRabbit (planned) and Gemini CI audit (done).
+**Last updated:** 2026-04-03 — `.cursorrules`: authoritative lazy-locator + interaction-log + placeholder-chain rules; [ARCHITECTURE.md](ARCHITECTURE.md) adds Playwright Component Testing reference (2026, official docs). Decision doc: [playwright-locators-and-logging.md](decisions/playwright-locators-and-logging.md).
 
 This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly.
 

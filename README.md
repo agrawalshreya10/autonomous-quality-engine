@@ -108,6 +108,12 @@ orangehrm-playwright/
 
 Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`. See `config/env.example`.
 
+## Contributing and pull requests
+
+- **Standards:** Follow **`.cursorrules`** (POM, locators, `expect`, logging). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
+- **CodeRabbit:** When [CodeRabbit](https://coderabbit.ai) is connected to the repository, use it to catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursorrules`** and the decision docs remain authoritative for merges.
+- **PR template:** Opening a PR loads [`.github/pull_request_template.md`](.github/pull_request_template.md) — complete the checklist and confirm tests were run.
+
 ## License
 
 Use as needed for learning and portfolio. OrangeHRM is a trademark of OrangeHRM Inc.
