@@ -37,9 +37,10 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 
 ## AI Integration
 - **Rationale (CI + cloud LLM):** Recorded in [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md) — adopted approach **B + D** (on-demand analysis in CI; redacted, minimal publication surface). Interview-oriented talking points live locally under `.cursor/interview-prep/ci-ai-failure-analysis.md` (gitignored; not in the remote repo).
-- **AI Audit**: Ollama locally by default; optional Gemini (`gemini-1.5-flash`) via `GEMINI_API_KEY` when invoking the analyzer.
+- **Local Development**: **Automatic Local Failure Analysis via Ollama** — pytest hook auto-triggers analysis on test failures with smart truncation (2K char limit), Ollama health check (port 11434), and enhanced Quality Architect prompts; model output is persisted to `reports/ai_suggestions.md`.
+- **AI Audit**: Ollama locally (automatic + manual); optional Gemini (`gemini-1.5-flash`) via `GEMINI_API_KEY` when invoking the analyzer.
 - **CLI**: `python -m ai_audit.failure_analyzer --client gemini --artifacts-dir reports` (or `--client ollama`).
-- **CI**: `GEMINI_API_KEY` as a GitHub Actions secret when using an on-demand analysis workflow; align `.github/workflows/` with the decision doc (see roadmap).
+- **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails, with `GEMINI_API_KEY` secret for on-demand cloud analysis.
 
 ## Roadmap & Gaps (Ref: STATUS.md)
 1. **Dockerization**: Containerize the execution for GitHub Actions compatibility.
@@ -47,4 +48,4 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 3. **CI/CD**: Implementation of YAML-based pipelines for automated regression.
 4. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
 5. **CodeRabbit Integration** *(planned)*: AI-powered PR reviews on GitHub, configured to enforce `.cursorrules` standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or()` on critical locators).
-6. **Gemini AI Audit in CI** *(in progress)*: `GeminiClient` and `failure_analyzer` are implemented; refactor `test.yml` to match **B + D** (on-demand workflow + redacted single surface) per [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md).
+6. **Gemini AI Audit in CI** *(completed)*: `GeminiClient` and `failure_analyzer` are implemented; workflows now match **B + D** (separate on-demand analysis workflow + redacted single surface) per [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md). See [ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml).

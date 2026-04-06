@@ -1,6 +1,8 @@
 """Pytest fixtures: driver lifecycle, page factory, and optional logged-in session."""
 
 import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -47,6 +49,38 @@ def pytest_runtest_makereport(item, call):
                 f.write(f"TEST: {item.nodeid}\nMESSAGE: {msg}\n\n")
         except Exception:
             pass
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Auto-run AI failure analysis locally when tests fail."""
+    # Only run locally (not in CI) and only on test failures
+    if exitstatus != 0 and not os.environ.get("GITHUB_ACTIONS"):
+        failures_file = Path("reports/failures.txt")
+        if failures_file.exists() and failures_file.stat().st_size > 0:
+            out_path = Path("reports/ai_suggestions.md")
+            try:
+                print("\n[AI-AUDIT] Test session failed. Starting automatic failure analysis...")
+                subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "ai_audit.failure_analyzer",
+                        "--client",
+                        "auto",
+                        "--artifacts-dir",
+                        "reports",
+                        "--out",
+                        str(out_path),
+                    ],
+                    check=False,
+                    timeout=120,
+                )
+                if out_path.is_file() and out_path.stat().st_size > 0:
+                    print(f"[AI-AUDIT] Suggestions written to {out_path}")
+            except subprocess.TimeoutExpired:
+                print("[AI-AUDIT] Analysis timed out after 2 minutes.")
+            except Exception as e:
+                print(f"[AI-AUDIT] Analysis failed: {e}")
 
 
 @pytest.fixture(scope="function")

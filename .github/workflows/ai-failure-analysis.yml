@@ -1,0 +1,87 @@
+name: AI Failure Analysis
+
+on:
+  workflow_run:
+    workflows: ["Test Suite"]
+    types: [completed]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          path: ./artifacts
+
+      - name: AI failure analysis
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "${GEMINI_API_KEY}" ]; then
+            echo "GEMINI_API_KEY is not configured. Skipping AI analysis."
+            echo "## AI Analysis Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "GEMINI_API_KEY is not configured as a repository secret." >> $GITHUB_STEP_SUMMARY
+            echo "For local analysis, run:" >> $GITHUB_STEP_SUMMARY
+            echo '  python -m ai_audit.failure_analyzer --client ollama --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          
+          # Mask the API key in logs
+          echo "::add-mask::${GEMINI_API_KEY}"
+          
+          # Find test report artifacts and analyze
+          for artifact_dir in artifacts/test-report-* artifacts/smoke-report; do
+            if [ -d "$artifact_dir" ]; then
+              echo "Analyzing failures in $artifact_dir"
+              python -m ai_audit.failure_analyzer \
+                --client gemini \
+                --model gemini-1.5-flash \
+                --artifacts-dir "$artifact_dir" \
+                --out ai_suggestions_raw.md
+              
+              # Apply redaction before publishing
+              if [ -f ai_suggestions_raw.md ]; then
+                sed -E \
+                  -e 's/(AIza[0-9A-Za-z_-]{20,})/[REDACTED_GEMINI_KEY]/g' \
+                  -e 's/([A-Za-z0-9_]*(SECRET|TOKEN|PASSWORD|PASS|API_KEY)[A-Za-z0-9_]*[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1[REDACTED]/Ig' \
+                  -e 's/(Bearer[[:space:]]+)[A-Za-z0-9._-]+/\1[REDACTED]/g' \
+                  ai_suggestions_raw.md > ai_suggestions_redacted.md
+                
+                # Single primary surface: job summary only (no duplicate artifacts)
+                echo "## AI Failure Analysis" >> $GITHUB_STEP_SUMMARY
+                echo "Analysis of failed Test Suite run #${{ github.event.workflow_run.run_number }}" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                cat ai_suggestions_redacted.md >> $GITHUB_STEP_SUMMARY
+                
+                echo "AI analysis completed and published to job summary"
+                break
+              fi
+            fi
+          done
+          
+          # If no artifacts found or processed
+          if [ ! -f ai_suggestions_raw.md ]; then
+            echo "## AI Analysis - No Artifacts Found" >> $GITHUB_STEP_SUMMARY
+            echo "Could not locate test report artifacts from the failed Test Suite run." >> $GITHUB_STEP_SUMMARY
+            echo "For local analysis after downloading artifacts manually:" >> $GITHUB_STEP_SUMMARY
+            echo '  python -m ai_audit.failure_analyzer --client gemini --artifacts-dir ./path/to/artifacts' >> $GITHUB_STEP_SUMMARY
+          fi

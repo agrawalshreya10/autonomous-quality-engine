@@ -49,7 +49,8 @@ class GeminiClient(LLMClient):
         screenshot_path: str | None = None,
     ) -> str:
         parts = [
-            "You are a Senior SDET. A Playwright (Python) UI test failed.",
+            "You are a Quality Architect. Analyze the following failure. "
+            "Categorize it and provide the exact Playwright Python code fix using the Page Object Model and .or() resilient locators.",
             f"Test: {test_name}",
             f"Failure/error: {failure_message}",
         ]
@@ -61,8 +62,10 @@ class GeminiClient(LLMClient):
                 "(you cannot see the pixels; suggest based on typical UI issues)."
             )
         parts.append(
-            "Respond with two short sections: "
-            "**Probable cause** and **Suggested fix** (code or steps). Use markdown."
+            "Respond with three short sections: "
+            "**Category** (Locator, Timing, Data, Environment), "
+            "**Root Cause**, and "
+            "**Fix** (exact Python code using self.get_by_role().or_() patterns). Use markdown."
         )
         return "\n\n".join(parts)
 
