@@ -5,8 +5,8 @@ instances (MAMP, custom port, HTTPS) match Playwright context and login steps.
 """
 
 import pytest
+from playwright.sync_api import expect
 
-from pages.dashboard_page import DashboardPage
 from pages.login_page import LoginPage
 
 
@@ -27,7 +27,9 @@ def test_login_invalid_credentials(page_factory):
     login_page = page_factory.get_page(LoginPage)
     login_page.navigate()
     login_page.login(settings.orangehrm_user, "wrongpassword")
-    assert login_page.is_login_page_visible()
+    login_page.wait_for_url("**/auth/login**", timeout_ms=settings.timeout_ms)
+    expect(login_page.username_input).to_be_visible(timeout=settings.timeout_ms)
+    expect(login_page.password_input).to_be_visible(timeout=settings.timeout_ms)
     error = login_page.get_error_text()
     assert "Invalid credentials" in error or "Invalid" in error or len(error) > 0
 
@@ -42,4 +44,5 @@ def test_login_then_logout(page_factory):
     assert dashboard.is_loaded()
     dashboard.logout()
     login_page.wait_for_url("**/auth/login**", timeout_ms=settings.timeout_ms)
-    assert login_page.is_login_page_visible()
+    expect(login_page.username_input).to_be_visible(timeout=settings.timeout_ms)
+    expect(login_page.login_button).to_be_visible(timeout=settings.timeout_ms)

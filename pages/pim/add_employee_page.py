@@ -4,6 +4,7 @@ from playwright.sync_api import Locator, Page
 
 from config.settings import Settings
 from core.base_page import BasePage
+from core.orangehrm_urls import PIM_ADD_EMPLOYEE_URL
 
 
 class AddEmployeePage(BasePage):
@@ -38,8 +39,9 @@ class AddEmployeePage(BasePage):
 
     def is_loaded(self) -> bool:
         """True if add employee form is visible."""
-        self.wait_for_url("**/pim/addEmployee**", timeout_ms=self._settings.timeout_ms)
-        return self.is_visible(self.first_name_input, element_label="Employee first name field")
+        self.wait_for_url(PIM_ADD_EMPLOYEE_URL, timeout_ms=self._settings.timeout_ms)
+        self.wait_for_visible(self.first_name_input, element_label="Employee first name field", timeout_ms=self._settings.timeout_ms)
+        return True
 
     def fill_employee(
         self,

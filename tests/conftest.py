@@ -4,9 +4,11 @@ import os
 from pathlib import Path
 
 import pytest
+from playwright.sync_api import expect
 
 from config.settings import get_settings
 from core.driver import create_browser_context
+from core.orangehrm_urls import DASHBOARD_URL
 from core.page_factory import PageFactory
 
 
@@ -78,4 +80,7 @@ def logged_in_page_factory(page_factory):
     settings = get_settings()
     login_page = page_factory.get_page(LoginPage)
     login_page.login(settings.orangehrm_user, settings.orangehrm_password)
+    # Avoid immediate deep-link goto while post-login redirect/navigation is still settling (ERR_ABORTED).
+    expect(page_factory.page).to_have_url(DASHBOARD_URL, timeout=settings.timeout_ms)
+    page_factory.page.wait_for_load_state("domcontentloaded")
     return page_factory

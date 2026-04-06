@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
+from re import Pattern
 from typing import Any, TypeVar
 
 from playwright.sync_api import Locator, Page, expect
@@ -94,9 +95,9 @@ class BasePage:
         ctx = f"placeholder | {truncate_for_log(primary_placeholder)} | {truncate_for_log(fallback_placeholder)}"
 
         def _build() -> Locator:
-            return self._page.get_by_placeholder(primary_placeholder).or_(
+            return self._page.get_by_placeholder(primary_placeholder).first.or_(
                 self._page.get_by_placeholder(fallback_placeholder)
-            ).first
+            )
 
         return self._run("get_resilient_locator", ctx, _build)
 
@@ -110,7 +111,8 @@ class BasePage:
         url = f"{self.base_url}/{p}" if p else self.base_url
 
         def _goto() -> None:
-            self._page.goto(url, wait_until="domcontentloaded")
+            # "load" reduces flaky net::ERR_ABORTED on redirect-heavy app routes vs domcontentloaded alone.
+            self._page.goto(url, wait_until="load")
 
         self._run_logged("navigate", truncate_for_log(url), _goto)
 
@@ -172,8 +174,13 @@ class BasePage:
 
         self._run("wait_for_load_state", state, _wait)
 
-    def wait_for_url(self, pattern: str | None = None, timeout_ms: int | None = None) -> None:
-        ctx = pattern or ""
+    def wait_for_url(
+        self,
+        pattern: str | Pattern[str] | None = None,
+        *,
+        timeout_ms: int | None = None,
+    ) -> None:
+        ctx = pattern.pattern if isinstance(pattern, Pattern) else (pattern or "")
 
         def _wait() -> None:
             self._page.wait_for_url(url=pattern, timeout=timeout_ms or self._settings.timeout_ms)

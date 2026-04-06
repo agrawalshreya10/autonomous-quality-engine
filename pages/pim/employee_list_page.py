@@ -4,6 +4,7 @@ from playwright.sync_api import Locator, Page
 
 from config.settings import Settings
 from core.base_page import BasePage
+from core.orangehrm_urls import PIM_EMPLOYEE_LIST_URL
 
 
 class EmployeeListPage(BasePage):
@@ -39,11 +40,10 @@ class EmployeeListPage(BasePage):
 
     def is_loaded(self) -> bool:
         """True if table or 'No Records' is visible."""
-        self.wait_for_url("**/pim/viewEmployeeList**", timeout_ms=self._settings.timeout_ms)
-        return self.is_visible(self.employee_table, element_label="Employee results table") or self.is_visible(
-            self.no_records_message,
-            element_label="No records message",
-        )
+        self.wait_for_url(PIM_EMPLOYEE_LIST_URL, timeout_ms=self._settings.timeout_ms)
+        content = self.employee_table.or_(self.no_records_message)
+        self.wait_for_visible(content, element_label="Employee list table or empty state", timeout_ms=self._settings.timeout_ms)
+        return True
 
     def search_by_employee_name(self, name: str) -> "EmployeeListPage":
         """Type in employee name search and click Search."""
