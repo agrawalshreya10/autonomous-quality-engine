@@ -201,7 +201,7 @@ def main() -> int:
         return 1
 
     if args.failures and args.failures.exists():
-        failures = [(n, m, None) for n, m in _parse_failures_file(args.failures)]
+        failures = [(n, _trim_failure_message(m), None) for n, m in _parse_failures_file(args.failures)]
     else:
         failures = _read_failures_from_artifacts(args.artifacts_dir)
 
