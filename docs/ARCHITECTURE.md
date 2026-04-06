@@ -43,7 +43,7 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 - **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails, with `GEMINI_API_KEY` secret for on-demand cloud analysis.
 
 ## Roadmap & Gaps (Ref: STATUS.md)
-1. **Dockerization**: Containerize the execution for GitHub Actions compatibility.
+1. **Dockerization**: Containerize the execution for GitHub Actions compatibility. For attaching services (DB, cache) in GitHub Actions jobs, see [reference/github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) (summary of [official docs](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers)).
 2. **Dynamic Data**: Transition from static JSON to runtime data generation using Faker.
 3. **CI/CD**: Implementation of YAML-based pipelines for automated regression.
 4. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
