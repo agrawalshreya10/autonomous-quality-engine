@@ -30,6 +30,10 @@ Full list: [Events that trigger workflows](https://docs.github.com/en/actions/us
 
 This repo’s [ai-failure-analysis.yml](../../.github/workflows/ai-failure-analysis.yml) uses `workflow_run` with `workflows: ["Test Suite"]` and `types: [completed]`.
 
+## Cross-run artifact download (`download-artifact@v4` + `run-id`)
+
+[`actions/download-artifact@v4`](https://github.com/actions/download-artifact) can download artifacts from **another** workflow run when you pass `run-id` (and optionally `repository`). For that case the action README requires a token that is **not** limited to the current run’s artifact scope — typically a **personal access token** (PAT) stored as a repository secret with **`actions: read`** (fine-grained PAT on the repo) or appropriate **classic** scopes (e.g. private repos often need `repo`). **`GITHUB_TOKEN` alone is not sufficient** when `run-id` refers to a different run (e.g. the failed **Test Suite** run from a follow-up **AI Failure Analysis** workflow). This repo uses secret **`ACTIONS_ARTIFACT_READ_TOKEN`** for that step.
+
 ## Path filters and diffs
 
 - For `push` / `pull_request`, combining **branch** and **path** filters requires **both** to match.

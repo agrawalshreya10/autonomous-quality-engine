@@ -231,6 +231,7 @@ def main() -> int:
         print(f"## {test_name}\n\n{out}\n\n---")
 
     if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text("\n".join(output_lines))
         print(f"\nWrote suggestions to {args.out}", file=sys.stderr)
 

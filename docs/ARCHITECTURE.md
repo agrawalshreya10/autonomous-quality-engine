@@ -40,7 +40,7 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 - **Local Development**: **Automatic Local Failure Analysis via Ollama** — pytest hook auto-triggers analysis on test failures with smart truncation (2K char limit), Ollama health check (port 11434), and enhanced Quality Architect prompts; model output is persisted to `reports/ai_suggestions.md`.
 - **AI Audit**: Ollama locally (automatic + manual); optional Gemini (`gemini-1.5-flash`) via `GEMINI_API_KEY` when invoking the analyzer.
 - **CLI**: `python -m ai_audit.failure_analyzer --client gemini --artifacts-dir reports` (or `--client ollama`).
-- **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails, with `GEMINI_API_KEY` secret for on-demand cloud analysis. For triggers, `GITHUB_TOKEN` recursion, and event filters, see [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) ([official doc](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)).
+- **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails; **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT, `actions:read`) for cross-run artifact download and optional **`GEMINI_API_KEY`** for cloud analysis. For triggers, token limits, and `workflow_run`, see [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) ([official doc](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)).
 
 ## Roadmap & Gaps (Ref: PROJECTSTATUS.md)
 

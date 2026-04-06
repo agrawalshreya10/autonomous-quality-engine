@@ -12,6 +12,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 - _(Add entries here before the next dated release or snapshot.)_
 
+### Fixed
+
+- **AI Failure Analysis** workflow: use **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT with `actions:read`) for `actions/download-artifact@v4` with `run-id` instead of `GITHUB_TOKEN`, which is scoped only to the current workflow run; document in README, decision doc, and [github-actions-trigger-workflow.md](docs/reference/github-actions-trigger-workflow.md).
+
 ## [2026-04-06]
 
 ### Added

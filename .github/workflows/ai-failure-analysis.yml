@@ -25,10 +25,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Require cross-workflow artifact token
+        env:
+          ARTIFACT_TOKEN: ${{ secrets.ACTIONS_ARTIFACT_READ_TOKEN }}
+        run: |
+          if [ -z "${ARTIFACT_TOKEN}" ]; then
+            echo "::error::ACTIONS_ARTIFACT_READ_TOKEN is not set. Create a fine-grained PAT with Actions: Read on this repo (or a classic PAT with repo scope) and add it as this repository secret. See README and docs/decisions/ci-ai-failure-analysis.md."
+            echo "## AI Analysis — missing ACTIONS_ARTIFACT_READ_TOKEN" >> $GITHUB_STEP_SUMMARY
+            echo "Cross-run artifact download requires a PAT; \`GITHUB_TOKEN\` is not sufficient. See [ci-ai-failure-analysis.md](docs/decisions/ci-ai-failure-analysis.md)." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      # GITHUB_TOKEN is scoped to the *current* run only. This job is triggered by
+      # workflow_run, so run-id points at the failed Test Suite run — use a PAT with
+      # actions:read (fine-grained) or classic repo scope. See secrets note in README.
       - name: Download test artifacts
         uses: actions/download-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.ACTIONS_ARTIFACT_READ_TOKEN }}
+          repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
           path: ./artifacts
 

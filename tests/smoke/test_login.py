@@ -16,7 +16,8 @@ def test_login_success(page_factory):
     settings = page_factory.settings
     login_page = page_factory.get_page(LoginPage)
     login_page.navigate()
-    dashboard = login_page.login(settings.orangehrm_user, settings.orangehrm_password)
+    # TEMPORARY: Using wrong password to test CI failure analyzer - REVERT THIS LATER
+    dashboard = login_page.login(settings.orangehrm_user, "WRONG_PASSWORD_FOR_CI_TEST")
     assert dashboard.is_loaded()
 
 

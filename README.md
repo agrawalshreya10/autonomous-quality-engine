@@ -71,7 +71,7 @@ pytest tests/regression/
   - **smoke**: Runs `pytest -m smoke`, uploads `smoke-report` artifact.
   - **test**: Full suite with `pytest -n auto`, uploads `test-report-3.11` artifact.
 - **Artifacts**: Download from the run summary to get `reports/report.html` and `reports/screenshots/`.
-- **AI failure analysis (CI)**: On **Test Suite** failure, [`.github/workflows/ai-failure-analysis.yml`](.github/workflows/ai-failure-analysis.yml) can run Gemini-based analysis if the repository secret `GEMINI_API_KEY` is set. See [docs/decisions/ci-ai-failure-analysis.md](docs/decisions/ci-ai-failure-analysis.md). Run the analyzer locally against downloaded artifacts using the commands in [AI failure analysis](#ai-failure-analysis).
+- **AI failure analysis (CI)**: On **Test Suite** failure, [`.github/workflows/ai-failure-analysis.yml`](.github/workflows/ai-failure-analysis.yml) downloads artifacts from that run and can run Gemini-based analysis. Requires repository secrets **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT with **Actions: Read** on the repo — `GITHUB_TOKEN` cannot download another run’s artifacts) and optional **`GEMINI_API_KEY`**. See [docs/decisions/ci-ai-failure-analysis.md](docs/decisions/ci-ai-failure-analysis.md) and [reference/github-actions-trigger-workflow.md](docs/reference/github-actions-trigger-workflow.md). Run the analyzer locally using the commands in [AI failure analysis](#ai-failure-analysis).
 
 ## AI failure analysis
 

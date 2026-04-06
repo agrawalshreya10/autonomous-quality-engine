@@ -86,6 +86,7 @@ Adopt **B + D**:
 
 - The default **test** workflow should **not** depend on running Gemini on every `failure()` if the repository follows this decision; a **separate** workflow (or manual procedure) documents how to run analysis after a failure.
 - `GEMINI_API_KEY` remains optional in GitHub: CI test jobs can stay green without it; the on-demand workflow documents that the secret is required **only** when that workflow is used.
+- The **AI Failure Analysis** workflow downloads artifacts from the failed **Test Suite** run via `actions/download-artifact@v4` with `run-id`; that requires repository secret **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT with **`actions: read`** on the repo, per the [download-artifact README](https://github.com/actions/download-artifact)). `GITHUB_TOKEN` is scoped to the current run and is not sufficient for that cross-run download.
 - Local workflows stay valid: `failure_analyzer` with `--client ollama` or `--client gemini` and `.env` / environment variables.
 - Documentation in `docs/PROJECTSTATUS.md`, `docs/ARCHITECTURE.md`, and `config/env.example` should stay aligned with this decision as workflows are updated.
 
@@ -96,6 +97,7 @@ Adopt **B + D**:
 | Path | Role |
 |------|------|
 | `.github/workflows/test.yml` | Main CI: tests and report artifacts; should align with B+D once refactored. |
+| `.github/workflows/ai-failure-analysis.yml` | After Test Suite failure: download artifacts (needs **`ACTIONS_ARTIFACT_READ_TOKEN`** for cross-run `download-artifact@v4`), optional Gemini + redacted summary. |
 | `ai_audit/failure_analyzer.py` | CLI entrypoint; `--client`, `--artifacts-dir`, `--out`. |
 | `ai_audit/gemini_client.py` | Gemini HTTP client; reads `GEMINI_API_KEY`. |
 | `ai_audit/ollama_client.py` | Local Ollama client. |
