@@ -65,8 +65,6 @@ def pytest_sessionfinish(session, exitstatus):
                         sys.executable,
                         "-m",
                         "ai_audit.failure_analyzer",
-                        "--client",
-                        "auto",
                         "--artifacts-dir",
                         "reports",
                         "--out",

@@ -9,7 +9,7 @@ An Enterprise-Grade automation framework for OrangeHRM, designed for a Senior SD
 - **AI Audit**: Local Ollama for private log analysis + Gemini API (cloud) for advanced failure auditing.
 
 ## Tools
-- **Tech Stack**: Python, Playwright, Pytest, Gemini AI (for Audit).
+- **Tech Stack**: Python, Playwright, Pytest, **pytest-html** (primary HTML reports), Gemini AI (for Audit). **Allure** (`allure-pytest`) is planned for **Phase 3** — see Roadmap.
 
 ## Playwright Component Testing (reference — 2026)
 
@@ -40,12 +40,53 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 - **Local Development**: **Automatic Local Failure Analysis via Ollama** — pytest hook auto-triggers analysis on test failures with smart truncation (2K char limit), Ollama health check (port 11434), and enhanced Quality Architect prompts; model output is persisted to `reports/ai_suggestions.md`.
 - **AI Audit**: Ollama locally (automatic + manual); optional Gemini (`gemini-1.5-flash`) via `GEMINI_API_KEY` when invoking the analyzer.
 - **CLI**: `python -m ai_audit.failure_analyzer --client gemini --artifacts-dir reports` (or `--client ollama`).
-- **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails, with `GEMINI_API_KEY` secret for on-demand cloud analysis.
+- **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails, with `GEMINI_API_KEY` secret for on-demand cloud analysis. For triggers, `GITHUB_TOKEN` recursion, and event filters, see [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) ([official doc](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)).
 
-## Roadmap & Gaps (Ref: STATUS.md)
+## Roadmap & Gaps (Ref: PROJECTSTATUS.md)
+
+Development is grouped into **phases**; items below stay numbered for easy reference.
+
+### Phase 1 — Infrastructure
 1. **Dockerization**: Containerize the execution for GitHub Actions compatibility. For attaching services (DB, cache) in GitHub Actions jobs, see [reference/github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) (summary of [official docs](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers)).
+
+### Phase 2 — Data
 2. **Dynamic Data**: Transition from static JSON to runtime data generation using Faker.
-3. **CI/CD**: Implementation of YAML-based pipelines for automated regression.
-4. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
-5. **CodeRabbit Integration** *(planned)*: AI-powered PR reviews on GitHub, configured to enforce `.cursorrules` standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or()` on critical locators).
-6. **Gemini AI Audit in CI** *(completed)*: `GeminiClient` and `failure_analyzer` are implemented; workflows now match **B + D** (separate on-demand analysis workflow + redacted single surface) per [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md). See [ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml).
+
+### Phase 3 — CI/CD & reporting
+3. **CI/CD**: Harden YAML-based pipelines for automated regression. Event triggers and filters: [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) (summary of [Triggering a workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)). CI patterns for Python: [reference/github-actions-build-test-python.md](reference/github-actions-build-test-python.md).
+4. **Allure reporting**: Integrate **Allure** alongside (not necessarily replacing) **pytest-html**. Enable `allure-pytest` in `requirements.txt` (currently commented), configure pytest to write `allure-results/`, add CI steps to run the **Allure CLI** (or an Actions wrapper) to produce `allure-report/` and optionally upload as an artifact; keep `.gitignore` entries for `allure-results/` and `allure-report/`. Rationale: structured steps, attachments, and richer dashboards for portfolio and team review — see discussion in project docs vs. single-file HTML reports.
+
+### Later / cross-cutting
+5. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
+6. **CodeRabbit Integration** *(planned)*: AI-powered PR reviews on GitHub, configured to enforce `.cursorrules` standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or()` on critical locators).
+7. **Gemini AI Audit in CI** *(completed)*: `GeminiClient` and `failure_analyzer` are implemented; workflows now match **B + D** (separate on-demand analysis workflow + redacted single surface) per [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md). See [ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml).
+
+## GitHub documentation (reference summaries)
+
+Project-local notes in `docs/reference/` (canonical URLs on GitHub Docs):
+
+| Topic | Local summary | Official |
+|--------|-------------------|----------|
+| Actions quickstart | [github-actions-quickstart.md](reference/github-actions-quickstart.md) | [Quickstart for GitHub Actions](https://docs.github.com/en/actions/get-started/quickstart) |
+| Python build & test | [github-actions-build-test-python.md](reference/github-actions-build-test-python.md) | [Building and testing Python](https://docs.github.com/en/actions/tutorials/build-and-test-code/python) |
+| Custom actions | [github-actions-manage-custom-actions.md](reference/github-actions-manage-custom-actions.md) | [Managing custom actions](https://docs.github.com/en/actions/how-tos/create-and-publish-actions/manage-custom-actions) |
+| Workflow triggers | [github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) | [Triggering a workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) |
+| Docker service containers | [github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) | [Communicating with Docker service containers](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers) |
+| Repository licensing | [github-licensing-repository.md](reference/github-licensing-repository.md) | [Licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) |
+
+## Python documentation (reference summary)
+
+| Topic | Local summary | Official |
+|--------|-------------------|----------|
+| Python 3 docs index | [python-documentation.md](reference/python-documentation.md) | [Python 3 documentation](https://docs.python.org/3/) |
+
+
+## OrangeHRM documentation (reference summary)
+
+REST API Documentation (Open Source): orangehrm.github.io/orangehrm-api-doc
+
+Why: This defines the exact JSON structure for Employees, Users, and Timesheets. Use this to ensure your Faker data matches what the backend expects.
+
+GitHub Wiki (Architecture & Tech Stack): github.com/orangehrm/orangehrm/wiki/OrangeHRM-5X
+
+Why: Confirms the transition to Vue 3 and Symfony 5.4, which justifies using modern Playwright locators like get_by_role instead of old-school CSS IDs.

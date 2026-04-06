@@ -87,7 +87,7 @@ Adopt **B + D**:
 - The default **test** workflow should **not** depend on running Gemini on every `failure()` if the repository follows this decision; a **separate** workflow (or manual procedure) documents how to run analysis after a failure.
 - `GEMINI_API_KEY` remains optional in GitHub: CI test jobs can stay green without it; the on-demand workflow documents that the secret is required **only** when that workflow is used.
 - Local workflows stay valid: `failure_analyzer` with `--client ollama` or `--client gemini` and `.env` / environment variables.
-- Documentation in `docs/STATUS.md`, `docs/ARCHITECTURE.md`, and `config/env.example` should stay aligned with this decision as workflows are updated.
+- Documentation in `docs/PROJECTSTATUS.md`, `docs/ARCHITECTURE.md`, and `config/env.example` should stay aligned with this decision as workflows are updated.
 
 ---
 

@@ -1,8 +1,8 @@
 # OrangeHRM Playwright — project status
 
-**Last updated:** 2026-04-05 — **Automatic Local Failure Analysis via Ollama** implemented: pytest hook auto-triggers analysis on local test failures with smart truncation (2K char limit) and enhanced Quality Architect prompts. CI AI workflows implement B+D decision ([docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)): separate on-demand analysis workflow with redacted output hygiene.
+**Last updated:** 2026-04-06 — Roadmap phased (P1 Docker, P2 Faker data, **P3 CI/CD + Allure reporting**); see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
 
-This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly.
+This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly. **Chronological notable changes** are recorded in [CHANGELOG.md](../CHANGELOG.md) at the repository root.
 
 ---
 
@@ -49,6 +49,14 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 - First-party Python is on the order of **~900+ lines** across `core/`, `config/`, `pages/`, `tests/`, `utils/`, and `ai_audit/` (excluding virtualenvs).
 - The project is a **small vertical slice**, not a stub: driver, POM, fixtures, CI, and AI failure analysis are wired end-to-end.
 
+## Roadmap phases (see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd))
+
+| Phase | Focus |
+|-------|--------|
+| **1** | **Infrastructure** — Dockerization for CI/local parity; service containers as needed. |
+| **2** | **Data** — Move from static JSON to **Faker** (or similar) for runtime test data. |
+| **3** | **CI/CD & reporting** — Pipeline hardening plus **Allure** (`allure-pytest`) alongside **pytest-html**; dependency remains commented in `requirements.txt` until this phase. |
+
 ---
 
 ## What is implemented and working (as of last update)
@@ -86,3 +94,4 @@ There are no `TODO` / `FIXME` markers in first-party project code under `core/`,
 
 - Update this file when adding modules, tests, or changing architecture.
 - After major changes, bump **Last updated** and adjust the tables/sections above.
+- Log **notable** user-facing or structural changes in [CHANGELOG.md](../CHANGELOG.md); use git history for line-level archaeology.

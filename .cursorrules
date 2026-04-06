@@ -33,4 +33,4 @@
     - When the user asks what code is doing, follow `@.cursor/python-learning-preferences.md` (Java mental model → Python behavior → Python/industry terminology).
 - **AI-Driven Debugging**:
     - On failure, prioritize using `@ai_audit/failure_analyzer.py` to analyze the generated Playwright trace.
-    - **Context Awareness**: Refer to @docs/STATUS.md for project progress and @docs/ARCHITECTURE.md for system design.
+    - **Context Awareness**: Refer to @docs/PROJECTSTATUS.md for project progress and @docs/ARCHITECTURE.md for system design; @CHANGELOG.md for notable dated changes.

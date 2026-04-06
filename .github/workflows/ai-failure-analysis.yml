@@ -34,6 +34,7 @@ jobs:
 
       - name: AI failure analysis
         env:
+          AI_PROVIDER: gemini
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           if [ -z "${GEMINI_API_KEY}" ]; then
@@ -41,7 +42,7 @@ jobs:
             echo "## AI Analysis Skipped" >> $GITHUB_STEP_SUMMARY
             echo "GEMINI_API_KEY is not configured as a repository secret." >> $GITHUB_STEP_SUMMARY
             echo "For local analysis, run:" >> $GITHUB_STEP_SUMMARY
-            echo '  python -m ai_audit.failure_analyzer --client ollama --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY
+            echo '  python -m ai_audit.failure_analyzer --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
           
@@ -53,7 +54,6 @@ jobs:
             if [ -d "$artifact_dir" ]; then
               echo "Analyzing failures in $artifact_dir"
               python -m ai_audit.failure_analyzer \
-                --client gemini \
                 --model gemini-1.5-flash \
                 --artifacts-dir "$artifact_dir" \
                 --out ai_suggestions_raw.md
@@ -83,5 +83,5 @@ jobs:
             echo "## AI Analysis - No Artifacts Found" >> $GITHUB_STEP_SUMMARY
             echo "Could not locate test report artifacts from the failed Test Suite run." >> $GITHUB_STEP_SUMMARY
             echo "For local analysis after downloading artifacts manually:" >> $GITHUB_STEP_SUMMARY
-            echo '  python -m ai_audit.failure_analyzer --client gemini --artifacts-dir ./path/to/artifacts' >> $GITHUB_STEP_SUMMARY
+            echo '  AI_PROVIDER=gemini python -m ai_audit.failure_analyzer --artifacts-dir ./path/to/artifacts' >> $GITHUB_STEP_SUMMARY
           fi

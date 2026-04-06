@@ -1,15 +1,12 @@
-"""Gemini (Google AI) client for failure analysis via generateContent REST API."""
+"""Gemini (Google AI) client for failure analysis via google-generativeai SDK."""
 
-import json
 import os
-import urllib.error
-import urllib.request
 
 from ai_audit.client import LLMClient
 
 
 class GeminiClient(LLMClient):
-    """Call Gemini generateContent API when GEMINI_API_KEY is set."""
+    """Call Gemini when GEMINI_API_KEY is set (google-generativeai)."""
 
     def __init__(
         self,
@@ -31,7 +28,7 @@ class GeminiClient(LLMClient):
         if not self.api_key:
             return (
                 "GEMINI_API_KEY is not set. Export it or add it to .env, "
-                "or use OllamaClient (--client ollama) for local analysis."
+                "or use Ollama (--client ollama / AI_PROVIDER=ollama) for local analysis."
             )
         prompt = self._build_prompt(
             test_name=test_name,
@@ -70,33 +67,26 @@ class GeminiClient(LLMClient):
         return "\n\n".join(parts)
 
     def _generate(self, prompt: str) -> str:
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{self.model}:generateContent?key={self.api_key}"
-        )
-        body = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.2},
-        }
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(body).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout_sec) as resp:
-                data = json.loads(resp.read().decode())
-                candidates = data.get("candidates") or []
-                if not candidates:
-                    return f"Unexpected Gemini response: {data!r}"
-                content = candidates[0].get("content") or {}
-                text_parts = content.get("parts") or []
-                return (text_parts[0].get("text", "") if text_parts else "").strip()
-        except urllib.error.HTTPError as e:
-            err_body = e.read().decode(errors="replace") if e.fp else ""
-            return f"Gemini HTTP {e.code}: {err_body or e.reason}"
-        except urllib.error.URLError as e:
-            return f"Gemini request failed: {e.reason}"
+            import google.generativeai as genai
+        except ImportError:
+            return (
+                "google-generativeai is not installed. Run: pip install google-generativeai"
+            )
+
+        try:
+            genai.configure(api_key=self.api_key)
+            model = genai.GenerativeModel(self.model)
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2,
+                ),
+                request_options={"timeout": self.timeout_sec},
+            )
+            text = (getattr(response, "text", None) or "").strip()
+            if text:
+                return text
+            return f"Unexpected Gemini response (no text): {response!r}"
         except Exception as e:
             return f"Gemini error: {e}"
