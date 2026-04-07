@@ -106,7 +106,7 @@ Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gem
 Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell). CI uses the same variables in the AI Failure Analysis workflow.
 
 ```bash
-AI_PROVIDER=gemini python -m ai_audit.failure_analyzer --model gemini-1.5-flash --artifacts-dir reports
+AI_PROVIDER=gemini python -m ai_audit.failure_analyzer --model gemini-2.5-flash --artifacts-dir reports
 ```
 
 Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `python -m ai_audit.failure_analyzer --help`).

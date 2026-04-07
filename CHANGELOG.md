@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Fixed
+
+- **Gemini AI audit** — Default and CI model updated from `gemini-1.5-flash` to **`gemini-2.5-flash`**. The former returns **404** from the Generative Language API (`models/... is not found for API version v1beta`), so failure analysis produced only that error instead of real suggestions.
+
 ### Changed
 
 - **Repository name** (documentation and packaging): **Autonomous Quality Engine** — `pyproject.toml` project name `autonomous-quality-engine`; README, `docs/ARCHITECTURE.md`, `docs/PROJECTSTATUS.md`, and `config/env.example` titles/paths updated accordingly. Rename the GitHub repository in **Settings** to match when ready.

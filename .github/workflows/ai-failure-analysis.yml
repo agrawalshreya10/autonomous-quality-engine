@@ -69,7 +69,7 @@ jobs:
             if [ -d "$artifact_dir" ]; then
               echo "Analyzing failures in $artifact_dir"
               python -m ai_audit.failure_analyzer \
-                --model gemini-1.5-flash \
+                --model gemini-2.5-flash \
                 --artifacts-dir "$artifact_dir" \
                 --out ai_suggestions_raw.md
               

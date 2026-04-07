@@ -11,7 +11,7 @@ class GeminiClient(LLMClient):
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "gemini-1.5-flash",
+        model: str = "gemini-2.5-flash",
         timeout_sec: int = 120,
     ) -> None:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
