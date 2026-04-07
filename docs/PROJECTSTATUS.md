@@ -1,4 +1,4 @@
-# OrangeHRM Playwright — project status
+# Autonomous Quality Engine — project status
 
 **Last updated:** 2026-04-06 — Roadmap phased (P1 Docker, P2 Faker data, **P3 CI/CD + Allure reporting**); see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
 

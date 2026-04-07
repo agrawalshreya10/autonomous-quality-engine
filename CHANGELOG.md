@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Changed
+
+- **Repository name** (documentation and packaging): **Autonomous Quality Engine** — `pyproject.toml` project name `autonomous-quality-engine`; README, `docs/ARCHITECTURE.md`, `docs/PROJECTSTATUS.md`, and `config/env.example` titles/paths updated accordingly. Rename the GitHub repository in **Settings** to match when ready.
+
 ### Added
 
 - _(Add entries here before the next dated release or snapshot.)_
