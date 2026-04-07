@@ -1,8 +1,10 @@
 # Autonomous Quality Engine
 
-Enterprise-grade test automation for [OrangeHRM](https://www.orangehrm.com/) using **Playwright** (Python), **Page Object Model** with **Factory Pattern**, **GitHub Actions** CI/CD, and optional **AI failure analysis** via local Ollama.
+Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **Page Object Model** with **Factory Pattern**, **GitHub Actions** CI/CD, and optional **AI failure analysis** (Ollama or Gemini).
 
-Target: [OrangeHRM Open Source Demo](https://opensource-demo.orangehrmlive.com/).
+**System under test (default):** the **public demo** only — base URL `https://opensource-demo.orangehrmlive.com/` (e.g. [demo login](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login)). CI and the default `BASE_URL` in [`config/env.example`](config/env.example) use this host. The suite is **not** aimed at OrangeHRM’s marketing site, customer production tenants, or any live product URL other than that shared demo (or whatever you set in `BASE_URL` for local/Docker instances).
+
+*Product reference:* [OrangeHRM](https://www.orangehrm.com/) (vendor / product information only, not an automation target.)
 
 ## Features
 
