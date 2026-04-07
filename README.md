@@ -145,4 +145,4 @@ Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHR
 
 ## License
 
-Use as needed for learning and portfolio. OrangeHRM is a trademark of OrangeHRM Inc.
+This repository is released under the [MIT License](LICENSE). Use as needed for learning and portfolio. OrangeHRM is a trademark of OrangeHRM Inc.

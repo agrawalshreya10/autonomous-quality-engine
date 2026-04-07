@@ -3,6 +3,7 @@ name = "autonomous-quality-engine"
 version = "0.1.0"
 description = "Autonomous quality engine — OrangeHRM test suite with Playwright (Python), POM, and AI audit"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
 dependencies = [
     "playwright>=1.40.0",
