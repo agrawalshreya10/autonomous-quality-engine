@@ -1,4 +1,4 @@
-# OrangeHRM Playwright Test Suite
+# Autonomous Quality Engine
 
 Enterprise-grade test automation for [OrangeHRM](https://www.orangehrm.com/) using **Playwright** (Python), **Page Object Model** with **Factory Pattern**, **GitHub Actions** CI/CD, and optional **AI failure analysis** via local Ollama.
 
@@ -22,7 +22,7 @@ Target: [OrangeHRM Open Source Demo](https://opensource-demo.orangehrmlive.com/)
 
 ```bash
 # Clone and enter project
-cd orangehrm-playwright
+cd autonomous-quality-engine
 
 # Create venv and install dependencies
 python -m venv .venv
@@ -112,7 +112,7 @@ Optional one-shot override without changing `.env`: `--client gemini` or `--clie
 ## Project structure
 
 ```
-orangehrm-playwright/
+autonomous-quality-engine/
 ├── .github/workflows/test.yml                 # CI: smoke + full test (Test Suite)
 ├── .github/workflows/ai-failure-analysis.yml  # Optional Gemini analysis after Test Suite failure
 ├── config/                      # Settings, env

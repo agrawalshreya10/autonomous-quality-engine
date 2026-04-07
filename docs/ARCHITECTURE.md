@@ -1,4 +1,4 @@
-# OrangeHRM Playwright Framework Architecture
+# Autonomous Quality Engine — framework architecture
 
 ## Project Overview
 An Enterprise-Grade automation framework for OrangeHRM, designed for a Senior SDET portfolio. 
