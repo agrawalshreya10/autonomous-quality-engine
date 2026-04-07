@@ -64,39 +64,44 @@ jobs:
           # Mask the API key in logs
           echo "::add-mask::${GEMINI_API_KEY}"
           
-          # Find test report artifacts and analyze
-          for artifact_dir in artifacts/test-report-* artifacts/smoke-report; do
-            if [ -d "$artifact_dir" ]; then
-              echo "Analyzing failures in $artifact_dir"
-              python -m ai_audit.failure_analyzer \
-                --model gemini-2.5-flash \
-                --artifacts-dir "$artifact_dir" \
-                --out ai_suggestions_raw.md
-              
-              # Apply redaction before publishing
-              if [ -f ai_suggestions_raw.md ]; then
-                sed -E \
-                  -e 's/(AIza[0-9A-Za-z_-]{20,})/[REDACTED_GEMINI_KEY]/g' \
-                  -e 's/([A-Za-z0-9_]*(SECRET|TOKEN|PASSWORD|PASS|API_KEY)[A-Za-z0-9_]*[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1[REDACTED]/Ig' \
-                  -e 's/(Bearer[[:space:]]+)[A-Za-z0-9._-]+/\1[REDACTED]/g' \
-                  ai_suggestions_raw.md > ai_suggestions_redacted.md
-                
-                # Single primary surface: job summary only (no duplicate artifacts)
-                echo "## AI Failure Analysis" >> $GITHUB_STEP_SUMMARY
-                echo "Analysis of failed Test Suite run #${{ github.event.workflow_run.run_number }}" >> $GITHUB_STEP_SUMMARY
-                echo "" >> $GITHUB_STEP_SUMMARY
-                cat ai_suggestions_redacted.md >> $GITHUB_STEP_SUMMARY
-                
-                echo "AI analysis completed and published to job summary"
-                break
-              fi
+          # Prefer smoke-report before test-report-*: when smoke fails but the matrix job
+          # passes, the matrix artifact has empty failures.txt and failure_analyzer exits 1.
+          # Try each downloaded artifact until one yields parseable failures (exit 0).
+          analysis_ok=0
+          for artifact_dir in artifacts/smoke-report artifacts/test-report-*; do
+            [ -d "$artifact_dir" ] || continue
+            echo "Trying AI analysis for: $artifact_dir"
+            set +e
+            python -m ai_audit.failure_analyzer \
+              --client gemini \
+              --model gemini-2.5-flash \
+              --artifacts-dir "$artifact_dir" \
+              --out ai_suggestions_raw.md
+            rc=$?
+            set -e
+            if [ "$rc" -eq 0 ] && [ -f ai_suggestions_raw.md ]; then
+              analysis_ok=1
+              break
             fi
+            echo "No parseable failures in $artifact_dir (analyzer exit $rc); trying next artifact if any."
           done
           
-          # If no artifacts found or processed
-          if [ ! -f ai_suggestions_raw.md ]; then
-            echo "## AI Analysis - No Artifacts Found" >> $GITHUB_STEP_SUMMARY
-            echo "Could not locate test report artifacts from the failed Test Suite run." >> $GITHUB_STEP_SUMMARY
-            echo "For local analysis after downloading artifacts manually:" >> $GITHUB_STEP_SUMMARY
-            echo '  AI_PROVIDER=gemini python -m ai_audit.failure_analyzer --artifacts-dir ./path/to/artifacts' >> $GITHUB_STEP_SUMMARY
+          if [ "$analysis_ok" -eq 1 ]; then
+            sed -E \
+              -e 's/(AIza[0-9A-Za-z_-]{20,})/[REDACTED_GEMINI_KEY]/g' \
+              -e 's/([A-Za-z0-9_]*(SECRET|TOKEN|PASSWORD|PASS|API_KEY)[A-Za-z0-9_]*[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1[REDACTED]/Ig' \
+              -e 's/(Bearer[[:space:]]+)[A-Za-z0-9._-]+/\1[REDACTED]/g' \
+              ai_suggestions_raw.md > ai_suggestions_redacted.md
+            
+            echo "## AI Failure Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "Analysis of failed Test Suite run #${{ github.event.workflow_run.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat ai_suggestions_redacted.md >> $GITHUB_STEP_SUMMARY
+            echo "AI analysis completed and published to job summary"
+            exit 0
           fi
+          
+          echo "## AI Analysis — no parseable failures" >> $GITHUB_STEP_SUMMARY
+          echo "None of the downloaded artifacts contained failures the analyzer could read (empty matrix run vs failed smoke is common). Ensure \`reports/failures.txt\` or \`reports/report.html\` is present in the artifact from the failing job." >> $GITHUB_STEP_SUMMARY
+          echo "For local analysis: \`python -m ai_audit.failure_analyzer --client gemini --artifacts-dir ./path/to/reports\`" >> $GITHUB_STEP_SUMMARY
+          exit 0
