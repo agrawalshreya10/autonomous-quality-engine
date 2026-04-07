@@ -9,5 +9,9 @@ pydantic>=2.5.0
 pydantic-settings>=2.1.0
 python-dotenv>=1.0.0
 
-# Optional: Allure (uncomment when needed)
+# AI audit (failure_analyzer): hybrid Ollama (local) + Gemini (cloud)
+requests>=2.31.0
+google-generativeai>=0.8.0
+
+# Phase 3 (CI/CD & reporting): Allure — uncomment when integrating; see docs/ARCHITECTURE.md Roadmap
 # allure-pytest>=2.13.0

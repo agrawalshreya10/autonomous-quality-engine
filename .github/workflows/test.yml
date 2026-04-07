@@ -70,49 +70,11 @@ jobs:
           path: reports/
           retention-days: 14
 
-      - name: AI failure analysis (Gemini)
-        if: failure()
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          if [ -z "${GEMINI_API_KEY}" ]; then
-            echo "GEMINI_API_KEY is not configured. Skipping AI analysis."
-            exit 0
-          fi
-          # Ensure accidental echoes of this value are masked in logs.
-          echo "::add-mask::${GEMINI_API_KEY}"
-          python -m ai_audit.failure_analyzer --client gemini --model gemini-1.5-flash --artifacts-dir reports --out reports/ai_suggestions.md
-          # Publish only redacted content to job summary.
-          sed -E \
-            -e 's/(AIza[0-9A-Za-z_-]{20,})/[REDACTED_GEMINI_KEY]/g' \
-            -e 's/([A-Za-z0-9_]*(SECRET|TOKEN|PASSWORD|PASS|API_KEY)[A-Za-z0-9_]*[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1[REDACTED]/Ig' \
-            -e 's/(Bearer[[:space:]]+)[A-Za-z0-9._-]+/\1[REDACTED]/g' \
-            reports/ai_suggestions.md > reports/ai_suggestions_redacted.md
-          echo "## AI fix suggestions" >> $GITHUB_STEP_SUMMARY
-          cat reports/ai_suggestions_redacted.md >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload AI suggestions (redacted)
-        uses: actions/upload-artifact@v4
-        if: failure() && hashFiles('reports/ai_suggestions_redacted.md') != ''
-        with:
-          name: ai-suggestions-redacted-${{ matrix.python-version }}
-          path: reports/ai_suggestions_redacted.md
-          retention-days: 14
-
-      - name: Upload AI suggestions (internal)
-        uses: actions/upload-artifact@v4
-        if: failure() && hashFiles('reports/ai_suggestions.md') != ''
-        with:
-          name: ai-suggestions-internal-${{ matrix.python-version }}
-          path: reports/ai_suggestions.md
-          retention-days: 3
-
       - name: Summary on failure
         if: failure()
         run: |
           echo "## Tests failed" >> $GITHUB_STEP_SUMMARY
           echo "Download the **test-report** artifact to view the HTML report and screenshots." >> $GITHUB_STEP_SUMMARY
-          echo "Redacted AI suggestions are published in the run summary and as an artifact." >> $GITHUB_STEP_SUMMARY
-          echo "Internal full AI suggestions are uploaded as a short-retention artifact for maintainers." >> $GITHUB_STEP_SUMMARY
-          echo "To get AI fix suggestions locally (Ollama), run:" >> $GITHUB_STEP_SUMMARY
-          echo '  python -m ai_audit.failure_analyzer --client ollama --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY
+          echo "For AI failure analysis, use the separate AI Failure Analysis workflow or run locally:" >> $GITHUB_STEP_SUMMARY
+          echo '  python -m ai_audit.failure_analyzer --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY
+          echo '  AI_PROVIDER=gemini python -m ai_audit.failure_analyzer --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY

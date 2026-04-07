@@ -1,8 +1,8 @@
 # OrangeHRM Playwright — project status
 
-**Last updated:** 2026-04-03 — `.cursorrules`: authoritative lazy-locator + interaction-log + placeholder-chain rules; [ARCHITECTURE.md](ARCHITECTURE.md) adds Playwright Component Testing reference (2026, official docs). Decision doc: [playwright-locators-and-logging.md](decisions/playwright-locators-and-logging.md).
+**Last updated:** 2026-04-06 — Roadmap phased (P1 Docker, P2 Faker data, **P3 CI/CD + Allure reporting**); see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
 
-This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly.
+This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly. **Chronological notable changes** are recorded in [CHANGELOG.md](../CHANGELOG.md) at the repository root.
 
 ---
 
@@ -38,9 +38,9 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
    pytest tests/regression/ -m pim
    ```
 
-7. **Reports** — `reports/report.html`, `reports/screenshots/` (on failure), `reports/failures.txt` (for AI audit).
+7. **Reports** — `reports/report.html`, `reports/screenshots/` (on failure), `reports/failures.txt` (for AI audit). After a **local** failed run with Ollama up, `reports/ai_suggestions.md` holds model output (same path when using `--out` manually).
 
-8. **AI failure analysis** — Local Ollama: `python -m ai_audit.failure_analyzer --artifacts-dir reports`. Gemini (requires `GEMINI_API_KEY` in `.env` or environment): `python -m ai_audit.failure_analyzer --client gemini --model gemini-1.5-flash --artifacts-dir reports`.
+8. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: `python -m ai_audit.failure_analyzer --artifacts-dir reports --out reports/ai_suggestions.md`. Gemini (requires `GEMINI_API_KEY` in `.env` or environment): `python -m ai_audit.failure_analyzer --client gemini --model gemini-1.5-flash --artifacts-dir reports`. CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)).
 
 ---
 
@@ -48,6 +48,14 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 - First-party Python is on the order of **~900+ lines** across `core/`, `config/`, `pages/`, `tests/`, `utils/`, and `ai_audit/` (excluding virtualenvs).
 - The project is a **small vertical slice**, not a stub: driver, POM, fixtures, CI, and AI failure analysis are wired end-to-end.
+
+## Roadmap phases (see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd))
+
+| Phase | Focus |
+|-------|--------|
+| **1** | **Infrastructure** — Dockerization for CI/local parity; service containers as needed. |
+| **2** | **Data** — Move from static JSON to **Faker** (or similar) for runtime test data. |
+| **3** | **CI/CD & reporting** — Pipeline hardening plus **Allure** (`allure-pytest`) alongside **pytest-html**; dependency remains commented in `requirements.txt` until this phase. |
 
 ---
 
@@ -61,8 +69,8 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 | **Pages** | Login, dashboard, PIM (employee list + add employee), leave list — all use `BasePage` interactions |
 | **Tests** | 3 smoke + 5 regression (PIM + leave) |
 | **Fixtures** (`tests/conftest.py`) | `page`, `page_factory`, `logged_in_page_factory`, failure screenshots, `failures.txt` |
-| **AI audit** | `OllamaClient` (local), `GeminiClient` (`gemini-1.5-flash`); `failure_analyzer --client ollama\|gemini` |
-| **CI** (`.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts |
+| **AI audit** | **Automatic Local Failure Analysis via Ollama** (pytest hook), `GeminiClient` (`gemini-1.5-flash`); `failure_analyzer --client ollama\|gemini` with smart truncation |
+| **CI** (`.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts; separate AI failure analysis workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) |
 
 There are no `TODO` / `FIXME` markers in first-party project code under `core/`, `config/`, `pages/`, `tests/`, `ai_audit/`, or `utils/`.
 
@@ -86,3 +94,4 @@ There are no `TODO` / `FIXME` markers in first-party project code under `core/`,
 
 - Update this file when adding modules, tests, or changing architecture.
 - After major changes, bump **Last updated** and adjust the tables/sections above.
+- Log **notable** user-facing or structural changes in [CHANGELOG.md](../CHANGELOG.md); use git history for line-level archaeology.
