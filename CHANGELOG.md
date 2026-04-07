@@ -12,9 +12,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 - **Repository name** (documentation and packaging): **Autonomous Quality Engine** — `pyproject.toml` project name `autonomous-quality-engine`; README, `docs/ARCHITECTURE.md`, `docs/PROJECTSTATUS.md`, and `config/env.example` titles/paths updated accordingly. Rename the GitHub repository in **Settings** to match when ready.
 
+## [2026-04-07]
+
 ### Added
 
-- _(Add entries here before the next dated release or snapshot.)_
+- **MIT license** — Root [`LICENSE`](LICENSE) (MIT, copyright 2026 Shreya Agrawal); [`pyproject.toml`](pyproject.toml) `license = { file = "LICENSE" }`; README License section points to the file.
 
 ### Fixed
 
