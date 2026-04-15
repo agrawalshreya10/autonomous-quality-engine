@@ -77,14 +77,17 @@ class GeminiClient(LLMClient):
 
         try:
             client = genai.Client(api_key=self.api_key)
-            response = client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.2,
-                ),
-            )
-            client.close()
+            try:
+                response = client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.2,
+                    ),
+                )
+            finally:
+                client.close()                
+            
             text = (getattr(response, "text", None) or "").strip()
             if text:
                 return text
