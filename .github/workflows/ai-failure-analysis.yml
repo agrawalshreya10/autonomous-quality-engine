@@ -74,7 +74,7 @@ jobs:
             set +e
             python -m ai_audit.failure_analyzer \
               --client gemini \
-              --model gemini-2.5-flash \
+              --model gemini-3-flash \
               --artifacts-dir "$artifact_dir" \
               --out ai_suggestions_raw.md
             rc=$?

@@ -1,4 +1,4 @@
-"""Gemini (Google AI) client for failure analysis via google-generativeai SDK."""
+"""Gemini (Google AI) client for failure analysis via google-genai SDK."""
 
 import os
 
@@ -6,12 +6,12 @@ from ai_audit.client import LLMClient
 
 
 class GeminiClient(LLMClient):
-    """Call Gemini when GEMINI_API_KEY is set (google-generativeai)."""
+    """Call Gemini when GEMINI_API_KEY is set (google-genai)."""
 
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "gemini-2.5-flash",
+        model: str = "gemini-3-flash",
         timeout_sec: int = 120,
     ) -> None:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
@@ -68,22 +68,23 @@ class GeminiClient(LLMClient):
 
     def _generate(self, prompt: str) -> str:
         try:
-            import google.generativeai as genai
+            from google import genai
+            from google.genai import types
         except ImportError:
             return (
-                "google-generativeai is not installed. Run: pip install google-generativeai"
+                "google-genai is not installed. Run: pip install google-genai"
             )
 
         try:
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel(self.model)
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            client = genai.Client(api_key=self.api_key)
+            response = client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
                     temperature=0.2,
                 ),
-                request_options={"timeout": self.timeout_sec},
             )
+            client.close()
             text = (getattr(response, "text", None) or "").strip()
             if text:
                 return text

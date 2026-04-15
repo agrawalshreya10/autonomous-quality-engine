@@ -155,7 +155,7 @@ def _effective_provider(cli_client: str) -> str:
 def _resolve_model(provider: str, model: str | None) -> str:
     if model:
         return model
-    return "gemini-2.5-flash" if provider == "gemini" else "llama3"
+    return "gemini-3-flash" if provider == "gemini" else "llama3"
 
 
 def get_client(provider: str, model: str | None) -> LLMClient | None:
@@ -189,7 +189,7 @@ def main() -> int:
     parser.add_argument(
         "--model",
         default=None,
-        help="Optional model override (Ollama default: llama3, Gemini default: gemini-2.5-flash)",
+        help="Optional model override (Ollama default: llama3, Gemini default: gemini-3-flash)",
     )
     parser.add_argument("--out", type=Path, help="Write suggestions to file")
     args = parser.parse_args()

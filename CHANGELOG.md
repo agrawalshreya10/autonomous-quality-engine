@@ -15,7 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 ### Fixed
 
 - **AI Failure Analysis workflow** — Artifact order is **`smoke-report` before `test-report-*`**, and the analyzer **retries** other artifacts if the first exits non-zero (e.g. matrix passed with empty `failures.txt` while smoke failed). The job **no longer fails with exit code 1** when the wrong artifact was tried first; it publishes a summary or successful analysis.
-- **Gemini AI audit** — Default and CI model updated from `gemini-1.5-flash` to **`gemini-2.5-flash`**. The former returns **404** from the Generative Language API (`models/... is not found for API version v1beta`), so failure analysis produced only that error instead of real suggestions.
+- **Gemini AI audit** — Default and CI model updated to **`gemini-3-flash`** (previously `gemini-2.5-flash`; `gemini-1.5-flash` returned **404** from the Generative Language API), so failure analysis continues to produce real suggestions.
 
 ### Changed
 
@@ -45,10 +45,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 - **Test workflow** ([`.github/workflows/test.yml`](.github/workflows/test.yml)): removed inline Gemini steps and AI suggestion artifacts from the test job; failure summary points to the separate AI workflow and local analyzer commands.
 - **`ai_audit/failure_analyzer`**: failure message truncation; Ollama TCP health check on port 11434; failures file path handling.
-- **`ai_audit/gemini_client`**: `google-generativeai` SDK instead of raw REST.
+- **`ai_audit/gemini_client`**: migrate to `google-genai` (python-genai) SDK (replaces deprecated `google-generativeai`).
 - **`ai_audit/ollama_client`**: `requests` to `/api/generate`; `OLLAMA_BASE_URL` / `OLLAMA_MODEL` env support.
 - **`tests/conftest.py`**: `pytest_sessionfinish` runs automatic local failure analysis (non-CI) via `failure_analyzer` when the session fails and `reports/failures.txt` exists.
-- **Dependencies** (`requirements.txt`, `pyproject.toml`): `requests`, `google-generativeai`.
+- **Dependencies** (`requirements.txt`, `pyproject.toml`): `requests`, `google-genai`.
 
 ### Documentation
 
