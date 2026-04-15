@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Added
+
+- **`scripts/run_failure_analyzer.sh`** — Runs `ai_audit.failure_analyzer` with **`.venv/bin/python`** so shells where `python3` is **aliased to Homebrew** (common on macOS) still use project dependencies (`python-dotenv`, etc.). Documented in README.
+
 ### Fixed
 
 - **AI Failure Analysis workflow** — Artifact order is **`smoke-report` before `test-report-*`**, and the analyzer **retries** other artifacts if the first exits non-zero (e.g. matrix passed with empty `failures.txt` while smoke failed). The job **no longer fails with exit code 1** when the wrong artifact was tried first; it publishes a summary or successful analysis.

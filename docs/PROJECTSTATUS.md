@@ -40,7 +40,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 7. **Reports** — `reports/report.html`, `reports/screenshots/` (on failure), `reports/failures.txt` (for AI audit). After a **local** failed run with Ollama up, `reports/ai_suggestions.md` holds model output (same path when using `--out` manually).
 
-8. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: `python -m ai_audit.failure_analyzer --artifacts-dir reports --out reports/ai_suggestions.md`. Gemini (requires `GEMINI_API_KEY` in `.env` or environment): `python -m ai_audit.failure_analyzer --client gemini --model gemini-2.5-flash --artifacts-dir reports`. CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)).
+8. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: **`./scripts/run_failure_analyzer.sh`** (uses `.venv`; avoids macOS `python3` → Homebrew alias issues) or `.venv/bin/python -m ai_audit.failure_analyzer …`. Gemini (requires `GEMINI_API_KEY`): add `--client gemini --model gemini-2.5-flash`. CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)).
 
 ---
 

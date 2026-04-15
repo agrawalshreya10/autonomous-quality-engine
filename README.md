@@ -77,7 +77,25 @@ pytest tests/regression/
 
 ## AI failure analysis
 
-Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gemini`; default **`ollama`** if unset). Copy [`config/env.example`](config/env.example) and set `GEMINI_API_KEY` when using Gemini. Use the same venv as tests (`.venv/bin/python`) so **`python-dotenv`** and other deps load.
+Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gemini`; default **`ollama`** if unset). Copy [`config/env.example`](config/env.example) and set `GEMINI_API_KEY` when using Gemini.
+
+**Use the project venv for every CLI invocation.** On macOS, `python3` is often **aliased to Homebrew** (ignores `.venv`), which causes `ModuleNotFoundError: dotenv` and other missing packages. Prefer one of these — they always use **`.venv/bin/python`**:
+
+```bash
+# Recommended: wrapper (works no matter how python3 is aliased)
+./scripts/run_failure_analyzer.sh --help
+
+# Equivalent explicit form
+.venv/bin/python -m ai_audit.failure_analyzer --help
+```
+
+If `.venv` is missing or dependencies are not installed, from the **repository root**:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -U pip
+.venv/bin/python -m pip install -r requirements.txt
+```
 
 ### Local Ollama (default)
 
@@ -86,19 +104,19 @@ Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gem
    ollama pull llama3
    ```
 2. After test failures, `reports/failures.txt` is written; on **non-CI** runs the pytest session may also write **`reports/ai_suggestions.md`** automatically when Ollama is reachable.
-3. Run the analyzer manually if needed:
+3. Run the analyzer manually if needed (examples use the wrapper; add `--client ollama` if `.env` sets `AI_PROVIDER=gemini`):
    ```bash
    # From project root, with reports/ present (e.g. after a failed run)
-   python -m ai_audit.failure_analyzer --artifacts-dir reports
+   ./scripts/run_failure_analyzer.sh --artifacts-dir reports
 
-   # After downloading CI artifacts (extract to e.g. ./artifacts)
-   python -m ai_audit.failure_analyzer --artifacts-dir ./artifacts
+   # After downloading CI artifacts (extract so failures.txt lives under that folder)
+   ./scripts/run_failure_analyzer.sh --client ollama --artifacts-dir /path/to/smoke-report
 
    # Write suggestions to a file
-   python -m ai_audit.failure_analyzer --artifacts-dir reports --out reports/ai_suggestions.md
+   ./scripts/run_failure_analyzer.sh --artifacts-dir reports --out reports/ai_suggestions.md
 
    # Point at a failures file (TEST: / MESSAGE: blocks) instead of scanning artifacts
-   python -m ai_audit.failure_analyzer --failures path/to/failures.txt --out suggestions.md
+   ./scripts/run_failure_analyzer.sh --failures path/to/failures.txt --out suggestions.md
    ```
 
 ### Gemini (cloud)
@@ -106,10 +124,10 @@ Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gem
 Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell). CI uses the same variables in the AI Failure Analysis workflow.
 
 ```bash
-AI_PROVIDER=gemini python -m ai_audit.failure_analyzer --model gemini-2.5-flash --artifacts-dir reports
+AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-2.5-flash --artifacts-dir reports
 ```
 
-Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `python -m ai_audit.failure_analyzer --help`).
+Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `./scripts/run_failure_analyzer.sh --help`).
 
 ## Project structure
 
@@ -117,6 +135,7 @@ Optional one-shot override without changing `.env`: `--client gemini` or `--clie
 autonomous-quality-engine/
 ├── .github/workflows/test.yml                 # CI: smoke + full test (Test Suite)
 ├── .github/workflows/ai-failure-analysis.yml  # Optional Gemini analysis after Test Suite failure
+├── scripts/run_failure_analyzer.sh            # Run analyzer with .venv (avoids macOS python3 alias issues)
 ├── config/                      # Settings, env
 ├── core/                        # Driver, BasePage, PageFactory
 ├── pages/                       # POM: login, dashboard, pim, leave
