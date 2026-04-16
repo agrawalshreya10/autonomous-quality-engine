@@ -11,15 +11,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 ### Added
 
 - **`scripts/run_failure_analyzer.sh`** — Runs `ai_audit.failure_analyzer` with **`.venv/bin/python`** so shells where `python3` is **aliased to Homebrew** (common on macOS) still use project dependencies (`python-dotenv`, etc.). Documented in README.
+- **Gemini / Google GenAI SDK doc references** — `docs/reference/gemini-genai-sdk-docs.md` (links to official Gemini libraries page and the Python `genai` generated reference docs); cross-linked from `docs/ARCHITECTURE.md` and `docs/PROJECTSTATUS.md`.
 
 ### Fixed
 
 - **AI Failure Analysis workflow** — Artifact order is **`smoke-report` before `test-report-*`**, and the analyzer **retries** other artifacts if the first exits non-zero (e.g. matrix passed with empty `failures.txt` while smoke failed). The job **no longer fails with exit code 1** when the wrong artifact was tried first; it publishes a summary or successful analysis.
-- **Gemini AI audit** — Default and CI model updated to **`gemini-3-flash`** (previously `gemini-2.5-flash`; `gemini-1.5-flash` returned **404** from the Generative Language API), so failure analysis continues to produce real suggestions.
+- **Gemini AI audit** — Default and CI model updated to **`gemini-3.1-flash-lite-preview`** (replacing ad-hoc `gemini-3-flash` / older IDs; **`gemini-1.5-*`** is discontinued). Implementation uses **`google-genai`** only — **`genai.Client`** + **`client.models.generate_content`**, with **`HttpOptions(timeout=...)`** so **`timeout_sec`** is honored.
 
 ### Changed
 
 - **Repository name** (documentation and packaging): **Autonomous Quality Engine** — `pyproject.toml` project name `autonomous-quality-engine`; README, `docs/ARCHITECTURE.md`, `docs/PROJECTSTATUS.md`, and `config/env.example` titles/paths updated accordingly. Rename the GitHub repository in **Settings** to match when ready.
+- **Dependencies** — `requirements.txt` / `pyproject.toml` document that **`google-genai`** is the supported Gemini client (not legacy `google-generativeai`), pinned at **`1.73.1`** for deterministic installs.
 
 ## [2026-04-07]
 

@@ -124,7 +124,7 @@ python3 -m venv .venv
 Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell). CI uses the same variables in the AI Failure Analysis workflow.
 
 ```bash
-AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3-flash --artifacts-dir reports
+AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3.1-flash-lite-preview --artifacts-dir reports
 ```
 
 Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `./scripts/run_failure_analyzer.sh --help`).

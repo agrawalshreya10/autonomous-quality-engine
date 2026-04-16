@@ -14,7 +14,8 @@ dependencies = [
     "pydantic-settings>=2.1.0",
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
-    "google-genai>=0.1.0",
+    # Official Gemini client SDK (.cursor/rules/gemini-sdk-migration.mdc); do not use google-generativeai
+    "google-genai==1.73.1",
 ]
 
 [tool.pytest.ini_options]

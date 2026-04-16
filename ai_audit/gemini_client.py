@@ -1,8 +1,15 @@
-"""Gemini (Google AI) client for failure analysis via google-genai SDK."""
+"""Gemini (Google AI) client for failure analysis via google-genai SDK.
+
+Uses :class:`google.genai.Client` and ``client.models.generate_content`` (not
+``GenerativeModel``). Default model follows ``.cursor/rules/gemini-sdk-migration.mdc``.
+"""
 
 import os
 
 from ai_audit.client import LLMClient
+
+# Allowed family: gemini-3.1-flash-preview | gemini-3.1-flash-lite-preview (see gemini-sdk-migration.mdc)
+DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 
 
 class GeminiClient(LLMClient):
@@ -11,7 +18,7 @@ class GeminiClient(LLMClient):
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "gemini-3-flash",
+        model: str = DEFAULT_GEMINI_MODEL,
         timeout_sec: int = 120,
     ) -> None:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
@@ -75,8 +82,13 @@ class GeminiClient(LLMClient):
                 "google-genai is not installed. Run: pip install google-genai"
             )
 
+        # HttpOptions.timeout is in milliseconds (see google.genai.types.HttpOptions).
+        timeout_ms = max(1, int(self.timeout_sec * 1000))
         try:
-            client = genai.Client(api_key=self.api_key)
+            client = genai.Client(
+                api_key=self.api_key,
+                http_options=types.HttpOptions(timeout=timeout_ms),
+            )
             try:
                 response = client.models.generate_content(
                     model=self.model,
@@ -86,8 +98,8 @@ class GeminiClient(LLMClient):
                     ),
                 )
             finally:
-                client.close()                
-            
+                client.close()
+
             text = (getattr(response, "text", None) or "").strip()
             if text:
                 return text
