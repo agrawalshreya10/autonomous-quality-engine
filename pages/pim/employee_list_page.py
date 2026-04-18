@@ -18,10 +18,6 @@ class EmployeeListPage(BasePage):
         return self._page.locator(".oxd-table-body")
 
     @property
-    def no_records_message(self) -> Locator:
-        return self._page.get_by_text("No Records Found")
-
-    @property
     def search_employee_name_input(self) -> Locator:
         return self.get_resilient_placeholder("Type for hints...", "Employee Name")
 
@@ -39,10 +35,15 @@ class EmployeeListPage(BasePage):
         return self
 
     def is_loaded(self) -> bool:
-        """True if table or 'No Records' is visible."""
+        """True if list chrome is ready (table body present — rows or empty state)."""
         self.wait_for_url(PIM_EMPLOYEE_LIST_URL, timeout_ms=self._settings.timeout_ms)
-        content = self.employee_table.or_(self.no_records_message)
-        self.wait_for_visible(content, element_label="Employee list table or empty state", timeout_ms=self._settings.timeout_ms)
+        # Do not use `.oxd-table-body`.or_(get_by_text("No Records Found")): when empty, text
+        # often sits inside the table body — union matches container + child (strict / multi-match).
+        self.wait_for_visible(
+            self.employee_table,
+            element_label="Employee list table body",
+            timeout_ms=self._settings.timeout_ms,
+        )
         return True
 
     def search_by_employee_name(self, name: str) -> "EmployeeListPage":

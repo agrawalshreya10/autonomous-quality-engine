@@ -65,6 +65,10 @@ When **both** placeholders could match different elements in the same DOM, `.fir
 - Prefer verifying behavior against a real page (local OrangeHRM / demo) rather than guessing locator algebra.
 - Use **Playwright MCP** (see below) to inspect structure and reduce trial-and-error.
 
+### `.or_()` must not pair **parent** and **child** of the same widget
+
+If the left locator matches a **container** (e.g. `role=alert`, `.oxd-table-body`) and the right matches a **node inside it** (e.g. `.oxd-alert-content-text`, `get_by_text("No Records Found")`), the union can resolve to **two** elements at once. `expect(locator)` and other strict operations then fail. Prefer a **single** locator (e.g. the inner text node only) or wait for **one** stable container that is always present when the view loads.
+
 ---
 
 ## 3. Playwright MCP (Cursor)
@@ -83,6 +87,7 @@ When **both** placeholders could match different elements in the same DOM, `.fir
 |-------|----------|
 | Logging | Is “Performed …” only logged after the action succeeds? |
 | `.or_()` | Does the chain preserve **primary-first** intent (especially for placeholders)? |
+| `.or_()` | Does the union avoid **parent + child** of the same UI block (strict multi-match)? |
 | Laziness | Am I treating `Locator` as a description, not a resolved element handle? |
 | Proof | Did I validate against a running app or trace, not only code reading? |
 
