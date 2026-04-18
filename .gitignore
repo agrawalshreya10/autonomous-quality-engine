@@ -37,6 +37,7 @@ allure-report/
 test-results/
 playwright-report/
 .playwright/
+.playwright-browsers/
 *.trace
 *.zip
 
