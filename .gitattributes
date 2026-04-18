@@ -1,0 +1,2 @@
+# Shell scripts must use LF so shebang works on macOS/Linux (avoid env: bash\r)
+*.sh text eol=lf

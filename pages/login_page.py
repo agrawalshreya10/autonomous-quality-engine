@@ -1,6 +1,6 @@
 """Login page object for OrangeHRM."""
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import Locator, Page, TimeoutError, expect
 
 from config.settings import Settings
 from core.base_page import BasePage
@@ -28,7 +28,10 @@ class LoginPage(BasePage):
 
     @property
     def error_message(self) -> Locator:
-        return self._page.locator(".oxd-alert-content-text")
+        # Union: Oxd alert text span, or ARIA alert (demo / skin variants).
+        return self._page.locator(".oxd-alert-content-text").or_(
+            self._page.get_by_role("alert")
+        )
 
     def login(self, username: str, password: str) -> DashboardPage:
         """Enter credentials, click Login, return Dashboard page object."""
@@ -39,10 +42,18 @@ class LoginPage(BasePage):
         return DashboardPage(self._page, self._settings)
 
     def get_error_text(self) -> str:
-        """Return visible error message text if present."""
-        if self.is_visible(self.error_message, element_label="Login error alert"):
-            return self.get_text(self.error_message, element_label="Login error alert")
-        return ""
+        """Return visible login error text if present; waits for the alert (web-first)."""
+        # is_visible() does not wait; the alert often appears after the failed login response.
+        try:
+            expect(self.error_message).to_be_visible(timeout=self._settings.timeout_ms)
+        except TimeoutError:
+            # No login error displayed (expected for successful login flows).
+            return ""
+        except Exception:
+            # Unexpected Playwright/runtime error: log and re-raise per .cursorrules.
+            self._error_logger.exception("Failed to read login error alert text")
+            raise
+        return self.get_text(self.error_message, element_label="Login error alert")
 
     def is_login_page_visible(self) -> bool:
         """True if username field and login button are visible."""

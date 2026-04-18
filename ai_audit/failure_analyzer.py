@@ -18,7 +18,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from ai_audit.client import LLMClient
-from ai_audit.gemini_client import GeminiClient
+from ai_audit.gemini_client import DEFAULT_GEMINI_MODEL, GeminiClient
 from ai_audit.ollama_client import OllamaClient
 
 
@@ -155,7 +155,7 @@ def _effective_provider(cli_client: str) -> str:
 def _resolve_model(provider: str, model: str | None) -> str:
     if model:
         return model
-    return "gemini-1.5-flash" if provider == "gemini" else "llama3"
+    return DEFAULT_GEMINI_MODEL if provider == "gemini" else "llama3"
 
 
 def get_client(provider: str, model: str | None) -> LLMClient | None:
@@ -189,7 +189,10 @@ def main() -> int:
     parser.add_argument(
         "--model",
         default=None,
-        help="Optional model override (Ollama default: llama3, Gemini default: gemini-1.5-flash)",
+        help=(
+            "Optional model override (Ollama default: llama3, "
+            f"Gemini default: {DEFAULT_GEMINI_MODEL})"
+        ),
     )
     parser.add_argument("--out", type=Path, help="Write suggestions to file")
     args = parser.parse_args()

@@ -38,7 +38,7 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 ## AI Integration
 - **Rationale (CI + cloud LLM):** Recorded in [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md) — adopted approach **B + D** (on-demand analysis in CI; redacted, minimal publication surface). Interview-oriented talking points live locally under `.cursor/interview-prep/ci-ai-failure-analysis.md` (gitignored; not in the remote repo).
 - **Local Development**: **Automatic Local Failure Analysis via Ollama** — pytest hook auto-triggers analysis on test failures with smart truncation (2K char limit), Ollama health check (port 11434), and enhanced Quality Architect prompts; model output is persisted to `reports/ai_suggestions.md`.
-- **AI Audit**: Ollama locally (automatic + manual); optional Gemini (`gemini-1.5-flash`) via `GEMINI_API_KEY` when invoking the analyzer.
+- **AI Audit**: Ollama locally (automatic + manual); optional Gemini (default model ID matches `DEFAULT_GEMINI_MODEL` in [`ai_audit/gemini_client.py`](../ai_audit/gemini_client.py), currently `gemini-3.1-flash-lite-preview`) via `GEMINI_API_KEY` when invoking the analyzer.
 - **CLI**: `python -m ai_audit.failure_analyzer --client gemini --artifacts-dir reports` (or `--client ollama`).
 - **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails; **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT, `actions:read`) for cross-run artifact download and optional **`GEMINI_API_KEY`** for cloud analysis. For triggers, token limits, and `workflow_run`, see [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) ([official doc](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)).
 
@@ -73,6 +73,12 @@ Project-local notes in `docs/reference/` (canonical URLs on GitHub Docs):
 | Workflow triggers | [github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) | [Triggering a workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) |
 | Docker service containers | [github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) | [Communicating with Docker service containers](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers) |
 | Repository licensing | [github-licensing-repository.md](reference/github-licensing-repository.md) | [Licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) |
+
+## Gemini / Google GenAI SDK documentation (reference summary)
+
+| Topic | Local summary | Official |
+|--------|-------------------|----------|
+| Gemini API libraries + Python GenAI docs | [gemini-genai-sdk-docs.md](reference/gemini-genai-sdk-docs.md) | [Gemini API libraries](https://ai.google.dev/gemini-api/docs/libraries), [genai generated docs](https://googleapis.github.io/google-cloud-python/generated/docs/genai/) |
 
 ## Python documentation (reference summary)
 
