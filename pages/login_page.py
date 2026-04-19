@@ -28,10 +28,10 @@ class LoginPage(BasePage):
 
     @property
     def error_message(self) -> Locator:
-        # Union: Oxd alert text span, or ARIA alert (demo / skin variants).
-        return self._page.locator(".oxd-alert-content-text").or_(
-            self._page.get_by_role("alert")
-        )
+        # Single node: the visible message is `.oxd-alert-content-text` inside `role=alert`.
+        # Do NOT union `locator(".oxd-alert-content-text").or_(get_by_role("alert"))` — that
+        # resolves to two elements (parent div + child <p>), and expect() strict mode fails.
+        return self._page.locator(".oxd-alert-content-text")
 
     def login(self, username: str, password: str) -> DashboardPage:
         """Enter credentials, click Login, return Dashboard page object."""
