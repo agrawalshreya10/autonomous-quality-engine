@@ -1,6 +1,6 @@
 ---
 description: Standards for Generative AI and Gemini SDK usage
-globs: **/gemini_client.py, **/ai_analyser/*.py
+globs: ai_audit/**/*.py, **/gemini_client.py
 alwaysApply: true
 ---
 
@@ -13,7 +13,8 @@ alwaysApply: true
 
 ## Mandatory Patterns (CURRENT)
 - ALWAYS use the `google-genai` SDK.
-- ALWAYS use `gemini-3.1-flash-preview` for high-speed CI/CD analysis.
+- **Default model** (local CLI, CI failure analysis, and `DEFAULT_GEMINI_MODEL` in `ai_audit/gemini_client.py`): **`gemini-3.1-flash-lite-preview`** — cost/speed default; matches README, workflow, and CHANGELOG.
+- **Optional override:** `gemini-3.1-flash-preview` is allowed when explicitly passed (e.g. `--model`); do not treat it as the project default.
 - ALWAYS use `client = genai.Client(api_key=...)` for initialization.
 
 ## Enforcement

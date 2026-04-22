@@ -1,2 +1,15 @@
-# Shell scripts must use LF so shebang works on macOS/Linux (avoid env: bash\r)
+# Normalize text files to LF (cross-platform dev, consistent diffs, shebangs)
 *.sh text eol=lf
+
+# Python, docs, and config
+*.py text eol=lf
+*.md text eol=lf
+*.mdc text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+
+# JS/TS (tooling, MCP, etc.)
+*.js text eol=lf
+*.ts text eol=lf

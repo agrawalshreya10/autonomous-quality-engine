@@ -20,10 +20,13 @@ alwaysApply: false
 
 | Forbidden in `tests/**/*.py` | Use instead |
 |------------------------------|-------------|
-| Literal URLs (`https://…`, `http://localhost:8080/...`) | `get_settings().base_url` / navigation via page objects (`navigate()`, URL patterns in `core/orangehrm_urls.py` where applicable) |
+| Literal URLs (`https://…`, `http://localhost:8080/...`) | Prefer **`get_settings().base_url`** for the **environment-specific host** (demo vs local); use **`navigate()`** on page objects and path/constants from **`core/orangehrm_urls.py`** (e.g. regex for `wait_for_url`) for **path-level** navigation and assertions — not hardcoded full URLs. |
 | Usernames and passwords | `Settings` fields: `orangehrm_user`, `orangehrm_password` (from `.env` / env vars; defaults are demo-only) |
 | Employee names, IDs, leave types, and other domain inputs | `data/*.json`, `data/*.csv`, or helpers under `utils/` (e.g. `utils/helpers.py`) |
 | One-off strings repeated across tests | Named constants in a small `tests/constants.py` **or** a single row in `data/` — not scattered literals |
+
+- **`get_settings().base_url`** — use when you need the **root URL** of the SUT and it must track **.env** / CI (host only).
+- **`navigate()`** + **`core/orangehrm_urls.py`** — use for **route/path behavior**: page entry, and regex patterns (e.g. **`DASHBOARD_URL`**) for **`wait_for_url`** so tests stay consistent across hosts.
 
 **Allowed literals** (keep rare and intentional):
 
@@ -35,14 +38,16 @@ alwaysApply: false
 
 - **`data/`** — static or shared datasets (JSON, CSV). No Playwright imports, no test classes.
 - **`tests/`** — orchestration only: arrange data references, call page objects, assert outcomes.
-- **`utils/`** — cross-cutting helpers (truncation, logging helpers, future **`generate_test_data`**).
+- **`utils/`** — cross-cutting helpers (e.g. truncation, logging, and data builders in **`utils/helpers.py`**). The name **`generate_test_data`** (as in a **`generate_test_data` factory** or **`utils/generate_test_data.py`**) is **illustrative only**—that module is not in the repository; add shared factories under **`utils/helpers.py`** unless you introduce a new module in a dedicated change.
 
 When `data/` is empty for a suite, **add** `data/testdata.json` (or module-specific files) rather than embedding large dicts inside test files.
 
 ### Dynamic / synthetic data (parallel safety)
 
-- Prefer **`Faker`** or project helpers for **unique** names, employee IDs, and free text when tests run under **`pytest-xdist`** (`-n auto`). Colliding fixed strings can cause flaky shared-state failures on real backends.
-- If Faker is not yet a dependency, use **`utils/helpers.py`** or small random/UUID-based builders — but **do not** check in secrets or production credentials.
+- **Approach (single source):** **Do not add `Faker`.** The project does not list it in **`requirements.txt` / `pyproject.toml`**, and keeps synthetic data in **`utils/helpers.py`** (e.g. `random_string`, `unique_employee_name`, or UUID/timestamp-based builders you add there). For **`pytest-xdist`** (`-n auto`), import those helpers in tests so worker processes do not collide on fixed strings (flaky against real backends). **Rationale:** fewer third-party dependencies, one reviewed place for uniqueness logic, and shared helpers are easier to audit than ad hoc `Faker` usage scattered in tests.
+- **Where to add patterns:** Put new shared builders in **`utils/helpers.py`**, with a short **docstring** (or a module-level note) that mentions **pytest-xdist** and the intended use (names, IDs, free text). Do not embed one-off random/UUID blocks in individual test files when the same pattern will run under **`-n auto`**.
+- If you need locale-heavy or very large fake datasets, open a **dependency / ADR** change to add **`Faker`** to **`requirements.txt` / `pyproject.toml`**, then document usage beside **`utils/helpers.py`**. Until then, **do not** add **`Faker`** for tests.
+- **Do not** check in secrets or production credentials in helpers or data files.
 
 ---
 
@@ -93,7 +98,7 @@ Register markers in **`pyproject.toml`** `[tool.pytest.ini_options]` and use con
 
 If this rule grows to cover **heavy data-seeding** (DB resets, API setup chains, multi-tenant factories), **split** into:
 
-1. **`test-data.mdc`** — `data/`, Faker factories, fixtures that only build payloads.
+1. **`test-data.mdc`** — `data/`, `utils/helpers.py` (and **`Faker`** only if later added to dependencies), fixtures that only build payloads.
 2. **`test-execution.mdc`** — `conftest.py`, markers, xdist, CI entrypoints, hooks.
 
 Until then, keep a single **`test-strategy.mdc`** to avoid rule sprawl.

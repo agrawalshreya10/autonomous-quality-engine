@@ -4,7 +4,7 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 
 **System under test (default):** the **public demo** only — base URL `https://opensource-demo.orangehrmlive.com/` (e.g. [demo login](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login)). CI and the default `BASE_URL` in [`config/env.example`](config/env.example) use this host. The suite is **not** aimed at OrangeHRM’s marketing site, customer production tenants, or any live product URL other than that shared demo (or whatever you set in `BASE_URL` for local/Docker instances).
 
-*Product reference:* [OrangeHRM](https://www.orangehrm.com/) (vendor / product information only, not an automation target.)
+*Product reference:* [OrangeHRM](https://www.orangehrm.com/) (for product information only; the vendor site is not a test target).
 
 ## Features
 
@@ -41,7 +41,7 @@ cp config/env.example .env
 
 ### Cursor MCP (optional)
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers for Cursor (browser tooling, optional fetch/git/DB). **Do not commit** a real [`.cursor/mcp.json`](.cursor/mcp.json) — it often contains **machine paths** and **secrets** (e.g. database URLs). That file is listed in [`.gitignore`](.gitignore).
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers, when you add them in your local config, can provide Playwright browser inspection, HTTP fetch, git operations, and database access to Cursor’s AI assistant. **Do not commit** a real [`.cursor/mcp.json`](.cursor/mcp.json) — it often contains **machine paths** and **secrets** (e.g. database URLs). That file is listed in [`.gitignore`](.gitignore).
 
 **Setup:** copy the example and edit it locally. Cursor reads `.cursor/mcp.json` in this repo; keep your secrets only on your machine.
 
@@ -137,8 +137,11 @@ python3 -m venv .venv
 Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell). CI uses the same variables in the AI Failure Analysis workflow.
 
 ```bash
+# --model optional: omit to use DEFAULT_GEMINI_MODEL in ai_audit/gemini_client.py (gemini-3.1-flash-lite-preview)
 AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3.1-flash-lite-preview --artifacts-dir reports
 ```
+
+`gemini-1.5-*` model IDs are **not** supported here (decommissioned); use `gemini-3.1-flash-lite-preview` (default) or `gemini-3.1-flash-preview` as an explicit override. See **`.cursor/rules/gemini-sdk-migration.mdc`**.
 
 Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `./scripts/run_failure_analyzer.sh --help`).
 

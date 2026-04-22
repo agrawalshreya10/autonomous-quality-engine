@@ -1,6 +1,6 @@
 ---
 description: Prevents usage of deprecated Google Generative AI patterns
-globs: **/gemini_client.py, **/ai_analyser/*.py
+globs: ai_audit/**/*.py, **/gemini_client.py
 alwaysApply: true
 ---
 
@@ -13,7 +13,7 @@ alwaysApply: true
 
 ## ✅ MANDATORY (Current)
 - **Library:** Use `google-genai` ONLY.
-- **Model IDs:** Use `gemini-3.1-flash-preview` or `gemini-3.1-flash-lite-preview`.
+- **Model IDs (allowed):** `gemini-3.1-flash-lite-preview` (default in `ai_audit/gemini_client.py` / CI) or `gemini-3.1-flash-preview` (optional explicit override).
 - **Architecture:** `client = genai.Client(api_key=...)` -> `client.models.generate_content(...)`.
 
 ## Enforcement Action

@@ -1,6 +1,6 @@
 ---
 description: Strict standards for Playwright Page Objects, Locators, and Synchronous execution.
-globs: pages/**/*.py, core/base_page.py
+globs: pages/**/*.py, pages/components/**/*.py, core/base_page.py, core/page_factory.py
 alwaysApply: false
 ---
 

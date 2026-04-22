@@ -36,7 +36,7 @@ Provider selection is **explicit** and centralized — do not scatter alternate 
 | **Package** | **`google-genai` only** (`pip install google-genai`; pin matches `requirements.txt` / `pyproject.toml`). |
 | **API shape** | `from google import genai` → `genai.Client(api_key=..., http_options=types.HttpOptions(timeout=ms))` → `client.models.generate_content(...)` → **`client.close()`** in `finally`. |
 | **Banned** | **`google-generativeai`**, **`GenerativeModel()`**, and any import path that triggers the legacy client. These cause **CI breakage** (deprecated endpoints / 404-class failures). |
-| **Models (allowed)** | **`gemini-3.1-flash-preview`** (preferred for CI when policy allows) and **`gemini-3.1-flash-lite-preview`** (default in `gemini_client.DEFAULT_GEMINI_MODEL` for cost/speed). |
+| **Models (allowed)** | **Default (CI + CLI + `DEFAULT_GEMINI_MODEL`):** **`gemini-3.1-flash-lite-preview`**. **Optional override:** **`gemini-3.1-flash-preview`** via `--model` or env when explicitly chosen. |
 | **Models (banned)** | `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-1.0-pro`, and other decommissioned IDs. |
 
 ### Ollama (local)
