@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "mcp-fetch-server"]
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git@latest",
+        "/path/to/optional/repository"
+      ]
+    },
+    "orangehrm-db": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-mysql@latest"],
+      "env": {
+        "MYSQL_URL": "mysql://USER:PASSWORD@HOST:PORT/DATABASE"
+      }
+    }
+  }
+}

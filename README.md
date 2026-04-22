@@ -39,6 +39,19 @@ playwright install chromium
 cp config/env.example .env
 ```
 
+### Cursor MCP (optional)
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers for Cursor (browser tooling, optional fetch/git/DB). **Do not commit** a real [`.cursor/mcp.json`](.cursor/mcp.json) — it often contains **machine paths** and **secrets** (e.g. database URLs). That file is listed in [`.gitignore`](.gitignore).
+
+**Setup:** copy the example and edit it locally. Cursor reads `.cursor/mcp.json` in this repo; keep your secrets only on your machine.
+
+```bash
+cp .cursor/mcp.json.example .cursor/mcp.json
+# Edit .cursor/mcp.json: set git repo path, MYSQL_URL, or remove servers you do not use.
+```
+
+The committed **[`.cursor/mcp.json.example`](.cursor/mcp.json.example)** shows the same *shape* as a typical config (Playwright MCP, optional fetch, git, optional MySQL). Replace placeholders; use `npx` for `command` where possible so paths match other developers. Remove any server block you do not need.
+
 ## Running tests
 
 Use the project virtualenv so Playwright, **python-dotenv**, and other dependencies resolve (`source .venv/bin/activate`, or invoke `.venv/bin/pytest` / `.venv/bin/python` directly).
@@ -133,6 +146,7 @@ Optional one-shot override without changing `.env`: `--client gemini` or `--clie
 
 ```
 autonomous-quality-engine/
+├── .cursor/mcp.json.example                    # Commit: sample MCP config (copy to .cursor/mcp.json)
 ├── .github/workflows/test.yml                 # CI: smoke + full test (Test Suite)
 ├── .github/workflows/ai-failure-analysis.yml  # Optional Gemini analysis after Test Suite failure
 ├── scripts/run_failure_analyzer.sh            # Run analyzer with .venv (avoids macOS python3 alias issues)

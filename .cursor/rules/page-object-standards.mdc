@@ -1,0 +1,186 @@
+---
+description: Strict standards for Playwright Page Objects, Locators, and Synchronous execution.
+globs: pages/**/*.py, core/base_page.py
+alwaysApply: false
+---
+
+# Page Object Standards
+
+## Architecture
+
+- **Structure:** Pages → `pages/`; Components → `pages/components/`; Base/driver → `core/`.
+- **Inheritance:** Every page class extends `BasePage(page, settings, path=...)`. Pass the URL path as `path` in `__init__`.
+- **PEP 8 + type hints everywhere.** All method signatures must have return types.
+
+## Docstrings (Google-style — mandatory)
+
+```python
+# ✅ CORRECT — every Page class and public method
+class LoginPage(BasePage):
+    """OrangeHRM login page: /web/index.php/auth/login."""
+
+    def login(self, username: str, password: str) -> DashboardPage:
+        """Enter credentials, click Login, return Dashboard page object."""
+
+# ❌ WRONG — missing or summary-only docstrings
+class LoginPage(BasePage):
+    pass
+
+def login(self, username, password):   # no return type, no docstring
+    ...
+```
+
+The Page class docstring **must** include the OrangeHRM URL path for the page it represents.
+
+---
+
+## Locator Priority
+
+Use semantic locators in this order. Fall back to CSS selectors only when no semantic option exists.
+
+1. `get_by_role()`
+2. `get_by_label()`
+3. `get_by_test_id()`
+4. `get_by_placeholder()`
+5. `locator("css-selector")` — last resort; prefer class or attribute selectors, never positional CSS.
+
+XPath is **banned** unless absolutely unavoidable. Positional selectors (`nth-child`, index-based CSS) are **banned** in locator properties.
+
+---
+
+## Resilient Locator Pattern (mandatory for all interactive elements)
+
+All key interactive element properties **must** use one of the `get_resilient_*` helpers from `BasePage`. These provide self-healing fallback between OrangeHRM 5.x selectors and local/MAMP (`ohrm.test`) DOM variants.
+
+```python
+# ✅ CORRECT — resilient patterns
+@property
+def username_input(self) -> Locator:
+    return self.get_resilient_locator('input[name="username"]', "#txtUsername")
+
+@property
+def login_button(self) -> Locator:
+    return self.get_resilient_role_button("Login", 'button[type="submit"]')
+
+@property
+def search_input(self) -> Locator:
+    return self.get_resilient_placeholder("Type for hints...", "Employee Name")
+
+# ❌ WRONG — bare locator with no fallback on a critical interactive element
+@property
+def username_input(self) -> Locator:
+    return self._page.locator("#txtUsername")
+```
+
+Available helpers in `BasePage`:
+- `get_resilient_locator(primary_selector, fallback_selector)` — CSS/attribute selectors.
+- `get_resilient_role_button(name, fallback_selector)` — role=button with CSS fallback.
+- `get_resilient_role_menuitem(name, fallback_selector)` — role=menuitem with CSS fallback.
+- `get_resilient_placeholder(primary_placeholder, fallback_placeholder)` — two placeholder variants.
+
+---
+
+## `.or_()` Strictness Governance (CRITICAL)
+
+`expect()` runs in **strict mode**: if a locator resolves to more than one element, it raises immediately.
+
+### Forbidden: parent + child union
+
+```python
+# ❌ BANNED — pairs container (role=alert) with a node inside it (.oxd-alert-content-text).
+# At runtime both elements exist simultaneously → strict mode failure.
+return self._page.locator(".oxd-alert-content-text").or_(self._page.get_by_role("alert"))
+
+# ❌ BANNED — same trap: table body + text node inside it.
+return self.employee_table.or_(self._page.get_by_text("No Records Found"))
+```
+
+**Why it breaks:** the parent container and its child are present in the DOM at the same time. The union resolves to 2 elements. `expect(locator).to_be_visible()` and similar strict assertions then raise: `"strict mode violation: N elements found"`.
+
+### Correct: target the leaf node
+
+```python
+# ✅ CORRECT — single specific node, always unique
+@property
+def error_message(self) -> Locator:
+    # The visible text is the <p class="oxd-alert-content-text"> inside the alert container.
+    # Do NOT union with get_by_role("alert") — that container is the parent of this node.
+    return self._page.locator(".oxd-alert-content-text")
+```
+
+**Standard:** Always target the most specific "leaf node" that carries the user-visible content. A parent container is only acceptable when the page guarantees exactly one instance of it and no child locator in the union matches a node inside it.
+
+### Placeholder resilience (`.first` placement)
+
+```python
+# ✅ CORRECT — .first constrains the primary side only
+page.get_by_placeholder(primary).first.or_(page.get_by_placeholder(fallback))
+
+# ❌ WRONG — .first on the full union selects by document order, breaks primary-first priority
+page.get_by_placeholder(primary).or_(page.get_by_placeholder(fallback)).first
+```
+
+### Lazy locator rule
+
+`Locator` objects do **not** query the DOM at construction time. `.first` and `.or_()` are descriptive filters evaluated only when an action or assertion runs. Do not refactor resilient chains on the false assumption that `.first` "resolves early" or that `.or_()` "breaks" because of it.
+
+See also: `docs/decisions/playwright-locators-and-logging.md`.
+
+---
+
+## Interactions — Use BasePage Methods
+
+Never call Playwright locator actions directly inside page methods.
+
+```python
+# ✅ CORRECT — routes through BasePage helpers (logging, visibility pre-check, error path)
+self.click(self.login_button, element_label="Login button")
+self.fill(self.username_input, username, element_label="Username field")
+text = self.get_text(self.error_message, element_label="Login error alert")
+
+# ❌ WRONG — bypasses logging and error handling contract
+self.login_button.click()
+self.username_input.fill(username)
+```
+
+`element_label` is **mandatory** on every `self.click()`, `self.fill()`, `self.get_text()`, `self.wait_for_visible()`, and `self.is_visible()` call. It is the structured identifier in interaction logs.
+
+---
+
+## Logging — Past-Tense Rule
+
+Emit interaction logs only **after** the action completes successfully inside `_run_logged`. This is enforced by `BasePage._run_logged` — do not call `log_interaction_result` or `log_interaction_start` manually in page methods.
+
+A failed action must **not** appear as a successful interaction in logs.
+
+---
+
+## Error Handling
+
+Every public page method must use try/except, log via `self._error_logger`, and re-raise.
+
+```python
+# ✅ CORRECT
+def get_error_text(self) -> str:
+    """Return visible login error text; waits for the alert (web-first)."""
+    try:
+        expect(self.error_message).to_be_visible(timeout=self._settings.timeout_ms)
+    except TimeoutError:
+        return ""          # expected path — no error alert shown
+    except Exception:
+        self._error_logger.exception("Failed to read login error alert text")
+        raise              # unexpected error: propagate to fail the test
+    return self.get_text(self.error_message, element_label="Login error alert")
+
+# ❌ WRONG — swallows all exceptions, hides failures
+except Exception:
+    return ""
+```
+
+---
+
+## Assertions
+
+- `expect(locator)` for **all UI state checks** (web-first, auto-waiting).
+- `assert` only for non-UI logic (API responses, data comparisons).
+- `page.wait_for_timeout()` is **banned**. Use `expect(...).to_be_visible()` or `wait_for_visible()`.

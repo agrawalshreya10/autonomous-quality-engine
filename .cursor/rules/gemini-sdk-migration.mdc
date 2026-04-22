@@ -1,0 +1,20 @@
+---
+description: Prevents usage of deprecated Google Generative AI patterns
+globs: **/gemini_client.py, **/ai_analyser/*.py
+alwaysApply: true
+---
+
+# 2026 Gemini SDK Governance
+
+## 🚫 BANNED (Deprecated)
+- **Model IDs:** `gemini-1.5-flash`, `gemini-1.5-pro`. (Shutdown Jan 2026)
+- **Library:** `google-generativeai`. (Replaced by `google-genai`)
+- **Pattern:** `genai.GenerativeModel()`. (Use `Client` object instead)
+
+## ✅ MANDATORY (Current)
+- **Library:** Use `google-genai` ONLY.
+- **Model IDs:** Use `gemini-3.1-flash-preview` or `gemini-3.1-flash-lite-preview`.
+- **Architecture:** `client = genai.Client(api_key=...)` -> `client.models.generate_content(...)`.
+
+## Enforcement Action
+If the user or code uses banned patterns, immediately suggest the migration fix and stop generation.

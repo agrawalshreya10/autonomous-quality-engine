@@ -1,0 +1,20 @@
+---
+description: Standards for Generative AI and Gemini SDK usage
+globs: **/gemini_client.py, **/ai_analyser/*.py
+alwaysApply: true
+---
+
+# Generative AI Standards (2026)
+
+## Forbidden Patterns (DEPRECATED)
+- NEVER use the `google-generativeai` package. It is legacy.
+- NEVER use model IDs `gemini-1.5-flash` or `gemini-1.0-pro`. These are decommissioned.
+- NEVER mix `sync` and `async` playwright calls in AI analysis scripts.
+
+## Mandatory Patterns (CURRENT)
+- ALWAYS use the `google-genai` SDK.
+- ALWAYS use `gemini-3.1-flash-preview` for high-speed CI/CD analysis.
+- ALWAYS use `client = genai.Client(api_key=...)` for initialization.
+
+## Enforcement
+If you see any legacy Gemini code, STOP and suggest a migration to the 2026 SDK immediately.
