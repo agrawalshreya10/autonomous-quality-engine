@@ -58,7 +58,7 @@ Development is grouped into **phases**; items below stay numbered for easy refer
 
 ### Later / cross-cutting
 5. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
-6. **CodeRabbit Integration** *(planned)*: AI-powered PR reviews on GitHub, configured to align with **`.cursor/rules/*.mdc`** standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or_()` on critical locators).
+6. **CodeRabbit Integration** *(configured)*: AI-powered PR reviews on GitHub, aligned with **`.cursor/rules/*.mdc`** standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or_()` on critical locators).
 7. **Gemini AI Audit in CI** *(completed)*: `GeminiClient` and `failure_analyzer` are implemented; workflows now match **B + D** (separate on-demand analysis workflow + redacted single surface) per [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md). See [ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml).
 
 ## GitHub documentation (reference summaries)

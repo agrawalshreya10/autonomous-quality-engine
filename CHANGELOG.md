@@ -11,6 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 ### Changed
 
 - **Cursor** — Removed root **`.cursorrules`**; project standards are defined in **`.cursor/rules/*.mdc`**. Removed the obsolete **`.cursor/ai-contract/`** folder (local learning notes can live under **`.cursor/user-docs/`**, gitignored).
+- **Documentation** — Added `docs/README.md` as the docs index, removed completed one-off plan files (`docs/plans/plan-dependency-determinism.md`, `docs/plans/plan-cursorrules-split.md`) after the migrations they described, and kept the `google-genai` maintenance note in the docs index and **`.cursor/rules/ai-audit-governance.mdc`** instead of duplicate plans. Standards are enforced in **`.cursor/rules/*.mdc`**.
 
 ## [2026-04-19]
 
@@ -18,8 +19,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 - **`scripts/run_failure_analyzer.sh`** — Runs `ai_audit.failure_analyzer` with **`.venv/bin/python`** so shells where `python3` is **aliased to Homebrew** (common on macOS) still use project dependencies (`python-dotenv`, etc.). Documented in README.
 - **Gemini / Google GenAI SDK doc references** — `docs/reference/gemini-genai-sdk-docs.md` (links to official Gemini libraries page and the Python `genai` generated reference docs); cross-linked from `docs/ARCHITECTURE.md` and `docs/PROJECTSTATUS.md`.
-- **`docs/plan-dependency-determinism.md`** — Plan to pin `google-genai` to exact version (`1.73.1`) for reproducible CI/local installs.
-- **`docs/plan-cursorrules-split.md`** — Plan to align project standards with scoped **`.cursor/rules/*.mdc`** files (replaces a former single root project-rules file).
 - **`.playwright-browsers/` gitignore** — Added to ignore large local Playwright browser installs.
 
 ### Fixed

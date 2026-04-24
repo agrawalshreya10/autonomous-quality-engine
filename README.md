@@ -14,6 +14,7 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 - **Reporting**: pytest-html report in `reports/`; screenshots on failure
 - **CI/CD**: GitHub Actions on push/PR; smoke job + full suite; upload reports as artifacts
 - **AI audit**: **Ollama** (local) or **Gemini** (cloud); optional auto-run after local failures; see [AI failure analysis](#ai-failure-analysis)
+- **Docs map**: [`docs/README.md`](docs/README.md) links architecture, decisions, historical plans, and reference notes.
 
 ## Requirements
 
@@ -178,9 +179,9 @@ Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHR
 ## Contributing and pull requests
 
 - **Standards:** Follow **`.cursor/rules/*.mdc`** (POM, locators, `expect`, logging; see `playwright-core-sync.mdc` and `page-object-standards.mdc`). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); project snapshot: [docs/PROJECTSTATUS.md](docs/PROJECTSTATUS.md); notable changes: [CHANGELOG.md](CHANGELOG.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
-- **CodeRabbit:** When [CodeRabbit](https://coderabbit.ai) is connected to the repository, use it to catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursor/rules/`** and the decision docs remain authoritative for merges.
+- **CodeRabbit:** [CodeRabbit](https://coderabbit.ai) is configured for the GitHub repository and can catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursor/rules/`** and the decision docs remain authoritative for merges.
 - **PR template:** Opening a PR loads [`.github/pull_request_template.md`](.github/pull_request_template.md) — complete the checklist and confirm tests were run.
 
 ## License
 
-This repository is released under the [MIT License](LICENSE). Use as needed for learning and portfolio. OrangeHRM is a trademark of OrangeHRM Inc.
+This repository is released under the [MIT License](LICENSE). Original portfolio project by Shreya Agrawal. OrangeHRM is a trademark of OrangeHRM Inc.
