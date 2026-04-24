@@ -50,7 +50,7 @@ class LoginPage(BasePage):
             # No login error displayed (expected for successful login flows).
             return ""
         except Exception:
-            # Unexpected Playwright/runtime error: log and re-raise per .cursorrules.
+            # Unexpected Playwright/runtime error: log and re-raise (see `.cursor/rules/page-object-standards.mdc`).
             self._error_logger.exception("Failed to read login error alert text")
             raise
         return self.get_text(self.error_message, element_label="Login error alert")

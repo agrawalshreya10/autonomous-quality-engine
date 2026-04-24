@@ -7,7 +7,7 @@ alwaysApply: false
 # AI Audit Governance
 
 > **Scope:** `ai_audit/` — failure analysis CLI (`failure_analyzer`), `GeminiClient`, `OllamaClient`, and shared `LLMClient` contracts.  
-> **Supersedes** ad-hoc GenAI advice in chat when this file is in context; keep **`gemini-sdk-migration.mdc`** / **`genai-standards.mdc`** aligned with this document (no conflicting model or SDK names).
+> **Canonical source of truth:** this file owns the Gemini package, model, and initialization policy for `ai_audit/`. Keep any always-applied migration guardrails short and point back here instead of restating section 2.
 
 ---
 
@@ -28,6 +28,8 @@ Provider selection is **explicit** and centralized — do not scatter alternate 
 ---
 
 ## 2. SDK & model standards (2026)
+
+This section is the single source of truth for Gemini SDK, model, and initialization requirements in `ai_audit/`.
 
 ### Gemini (cloud)
 

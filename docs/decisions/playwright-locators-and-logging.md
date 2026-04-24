@@ -96,5 +96,5 @@ If the left locator matches a **container** (e.g. `role=alert`, `.oxd-table-body
 ## References
 
 - `core/base_page.py` — `_run`, `navigate`, `click`, `fill`, `get_resilient_placeholder`
-- `.cursorrules` — `expect`, no `wait_for_timeout`, resilient critical locators
+- **`.cursor/rules/playwright-core-sync.mdc`**, **`.cursor/rules/page-object-standards.mdc`** — `expect`, no `wait_for_timeout`, resilient critical locators
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — high-level design pointer

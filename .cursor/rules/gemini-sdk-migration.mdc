@@ -1,20 +1,21 @@
 ---
-description: Prevents usage of deprecated Google Generative AI patterns
+description: Guards against legacy Gemini SDK patterns; canonical policy lives in ai-audit-governance.mdc
 globs: ai_audit/**/*.py, **/gemini_client.py
 alwaysApply: true
 ---
 
-# 2026 Gemini SDK Governance
+# Gemini SDK Migration Guard
 
-## 🚫 BANNED (Deprecated)
-- **Model IDs:** `gemini-1.5-flash`, `gemini-1.5-pro`. (Shutdown Jan 2026)
-- **Library:** `google-generativeai`. (Replaced by `google-genai`)
-- **Pattern:** `genai.GenerativeModel()`. (Use `Client` object instead)
+Use this file only to block legacy Gemini patterns during edits in `ai_audit/`.
 
-## ✅ MANDATORY (Current)
-- **Library:** Use `google-genai` ONLY.
-- **Model IDs (allowed):** `gemini-3.1-flash-lite-preview` (default in `ai_audit/gemini_client.py` / CI) or `gemini-3.1-flash-preview` (optional explicit override).
-- **Architecture:** `client = genai.Client(api_key=...)` -> `client.models.generate_content(...)`.
+For the canonical package, model, and initialization requirements, follow **`ai-audit-governance.mdc` section 2**.
 
-## Enforcement Action
-If the user or code uses banned patterns, immediately suggest the migration fix and stop generation.
+## Blocked legacy patterns
+
+- **Library:** `google-generativeai`
+- **Pattern:** `genai.GenerativeModel()`
+- **Decommissioned model IDs:** `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-1.0-pro`
+
+## Enforcement action
+
+If you see one of the blocked legacy patterns above, stop and migrate the code to the `google-genai` + `genai.Client(...)` flow defined in **`ai-audit-governance.mdc` section 2**.

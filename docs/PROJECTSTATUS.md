@@ -82,7 +82,7 @@ There are no `TODO` / `FIXME` markers in first-party project code under `core/`,
 
 2. **`utils/` integration** — **Resolved:** `truncate_for_log`, interaction loggers, and `BasePage` are wired; all page objects route critical actions through `self.click` / `self.fill` with descriptive `element_label` values.
 
-3. **`ai_audit` backends** — **Resolved:** `LLMClient` is implemented by **Ollama** (default, local) and **Gemini** (`GeminiClient`, `GEMINI_API_KEY`, `--client gemini`). Default Gemini model is **`gemini-3.1-flash-lite-preview`** (see `.cursor/rules/gemini-sdk-migration.mdc`).
+3. **`ai_audit` backends** — **Resolved:** `LLMClient` is implemented by **Ollama** (default, local) and **Gemini** (`GeminiClient`, `GEMINI_API_KEY`, `--client gemini`). Default Gemini model is **`gemini-3.1-flash-lite-preview`** (see `.cursor/rules/ai-audit-governance.mdc`).
 
 4. **Test rigor** — Some assertions are loose (e.g. PIM search allows zero rows; add-employee uses fixed names).
 

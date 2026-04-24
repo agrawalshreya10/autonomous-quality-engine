@@ -1,23 +1,12 @@
-# Plan: Split `.cursorrules` into `.cursor/rules/*.mdc`
-### Revision: Enterprise-Grade Governance Edition — 2026-04-19
+# Plan: Scoped Cursor rules (`.cursor/rules/*.mdc`)
+### Revision: Enterprise-Grade Governance Edition — 2026-04-19  
+### Status: **Complete** (2026-04-23)
 
 ---
 
-## Goal
+## Outcome
 
-Replace the single root **`.cursorrules`** with **four focused, scoped Cursor rules** under **`.cursor/rules/`**, each carrying hard governance guardrails to prevent AI agents from generating incorrect code. This plan now also addresses observed **framework smearing** (AI hallucinating Selenium or async patterns inside a sync Playwright project) and **SDK drift** (AI using deprecated Gemini APIs).
-
-The `.mdc` files become the **single source of truth** for all agent behavior in this codebase. Once validated, **`.cursorrules` will be removed** (Option B).
-
----
-
-## Current state
-
-| Source | Role |
-|--------|------|
-| **`.cursorrules`** | Monolithic Playwright/Pytest standards (~37 lines); only one context blob, no scoping. |
-| **`.cursor/rules/genai-standards.mdc`** | Gemini SDK governance for `ai_audit/`; `alwaysApply: true`. |
-| **`.cursor/rules/gemini-sdk-migration.mdc`** | Banned model IDs and patterns for `ai_audit/`; `alwaysApply: true`. |
+Project Playwright and test standards are defined in **`.cursor/rules/*.mdc`**. The previous single root project-rules file was removed so there is one governance layer. Personal learning notes can live under **`.cursor/user-docs/`** (gitignored).
 
 ---
 
@@ -36,13 +25,23 @@ alwaysApply: true|false
 
 - **`alwaysApply: true`** — injected into every chat session. Use only for rules short enough not to pollute context.
 - **`globs`** — injected only when a matching file is open/in scope.
-- A rule may have **both** `globs` and `alwaysApply: true` (global baseline + extra detail for matched files).
+- A rule may have **both** `globs` and **`alwaysApply: true`** (global baseline + extra detail for matched files).
 
 ---
 
-## Lean 4-File Target Split
+## Current rule set (authoritative)
 
-All seven original sections of `.cursorrules` are consolidated into four focused files that avoid context overlap while adding governance guardrails.
+| File | Role |
+|------|------|
+| **`playwright-core-sync.mdc`** | `alwaysApply: true` — sync Playwright, environment, `expect`, no `wait_for_timeout`. |
+| **`page-object-standards.mdc`** | `globs: pages/**`, `core/base_page.py`, `core/page_factory.py` — POM, `get_resilient_*`, logging, strictness. |
+| **`test-strategy.mdc`** | `globs: tests/**`, `data/**` — atomic tests, data isolation, `pytest` hooks. |
+| **`ai-audit-governance.mdc`** | `globs: ai_audit/**` — Gemini/Ollama policy for failure analysis; **`alwaysApply: false`** (load when editing `ai_audit/`). |
+| **`gemini-sdk-migration.mdc`** | Thin `alwaysApply: true` guard for legacy SDK/model strings; defers to `ai-audit-governance.mdc` §2. |
+
+---
+
+## Lean 4-file split (design reference)
 
 ### 1. `playwright-core-sync.mdc`
 **Scope:** `alwaysApply: true` (all sessions, short body)
@@ -80,9 +79,9 @@ OrangeHRM tests use `playwright.sync_api` exclusively. Any AI suggestion introdu
 ---
 
 ### 3. `ai-audit-governance.mdc`
-**Scope:** `alwaysApply: true` + `globs: ai_audit/**/*.py`
+**Scope:** `globs: ai_audit/**/*.py` (canonical policy when editing `ai_audit/`; not always-injected project-wide by design)
 
-> This rule **supersedes and replaces** any conflicting advice from `genai-standards.mdc` or `gemini-sdk-migration.mdc` on matters of model ID and SDK version. The existing `.mdc` files remain for backward-compat reference, but this file is the **enforcing standard**.
+> This rule is the **enforcing standard** for Gemini SDK, model, and initialization policy. `gemini-sdk-migration.mdc` stays a thin legacy-pattern guard that points back here rather than duplicating that section.
 
 | Concern | Content |
 |---------|---------|
@@ -103,7 +102,7 @@ OrangeHRM tests use `playwright.sync_api` exclusively. Any AI suggestion introdu
 | Concern | Content |
 |---------|---------|
 | Atomicity | Every test must be fully independent. Use `conftest.py` fixtures for setup/teardown; never share mutable state between tests. |
-| Data | Pull static data from `data/testdata.json` or equivalent. Use `utils/helpers.py`, `utils/generate_test_data.py`, or `Faker` for runtime data. No hardcoded user credentials, names, or IDs in test steps. |
+| Data | Pull static data from `data/testdata.json` or equivalent. Use `utils/helpers.py` for runtime data. No hardcoded user credentials, names, or IDs in test steps. |
 | Markers | Use `@pytest.mark.smoke`, `@pytest.mark.regression`, `@pytest.mark.pim`, `@pytest.mark.leave`. |
 | Parallel safety | Reference `BASE_URL` from config; assume `pytest-xdist` parallel runs; no shared file handles in tests. |
 | Assertions | `expect(locator)` for UI; `assert` only for data/non-UI checks. |
@@ -111,7 +110,7 @@ OrangeHRM tests use `playwright.sync_api` exclusively. Any AI suggestion introdu
 
 ---
 
-## Case Study: Framework Smearing Mitigation
+## Case study: framework smearing mitigation
 
 ### Observation (2026-04-19)
 
@@ -134,7 +133,7 @@ class LoginPage:
 **Problems in that suggestion:**
 
 | Issue | Why it is wrong |
-|-------|----------------|
+|-------|-----------------|
 | `async def` + `await` | This project uses `playwright.sync_api`. Async patterns are **architecturally incompatible** with the sync Playwright session lifecycle. |
 | `get_by_xpath(...)` | Playwright's Python API does not have a `get_by_xpath` method. This is a **Selenium `By.XPATH` hallucination** — the LLM confused Playwright Python with Selenium's `driver.find_element(By.XPATH, ...)`. |
 | Parent + child `.or_()` | `get_by_role("alert").or_(get_by_xpath("//div[@class='error-message']"))` would still hit the strict-mode violation if both resolve to different nodes. |
@@ -143,7 +142,7 @@ class LoginPage:
 
 The local Ollama model (`llama3`) has heavy Selenium training data. Without an explicit framework separation rule in context, it defaults to Selenium/async patterns when Playwright prompts look ambiguous.
 
-### Mitigation: Strict Framework Separation Rule
+### Mitigation: strict framework separation
 
 This is the **primary justification** for `playwright-core-sync.mdc` with `alwaysApply: true`. By injecting into every session:
 
@@ -151,74 +150,26 @@ This is the **primary justification** for `playwright-core-sync.mdc` with `alway
 2. **Locator API mandate** — `get_by_role`, `get_by_label`, `get_by_testid`, `get_by_placeholder`; no Selenium-style `find_element(By.*)` or `get_by_xpath`.
 3. **Framework identity** — explicit "This project uses `playwright.sync_api` (Python)" prevents model drift toward Selenium, JS Playwright, or Cypress patterns.
 
-The `ai-audit-governance.mdc` rule similarly prevents the Gemini API generating `GenerativeModel()` patterns or banned model IDs once the codebase grows.
+`ai-audit-governance.mdc` and `gemini-sdk-migration.mdc` address Gemini API drift in `ai_audit/`.
 
 ---
 
-## Migration phases
+## Migration (completed)
 
-### Phase 1 — Author `.mdc` files (parallel to `.cursorrules`)
-
-1. Branch from current `main`.
-2. Create the four files in `.cursor/rules/` per the definitions above.
-3. Retain `.cursorrules` during this phase — no deletion yet.
-4. Cross-check: for every bullet in `.cursorrules`, confirm it appears in exactly **one** `.mdc` file.
-
-### Phase 2 — Scope verification
-
-1. Open each key file type in Cursor: `pages/login_page.py`, `tests/smoke/test_login.py`, `ai_audit/gemini_client.py`.
-2. Confirm the **expected rules attach** (check Cursor's rule context panel).
-3. Adjust `globs` if a rule is missing or over-fires.
-4. Run `pytest -m smoke && pytest -m regression` — no code changes expected; green is the sanity gate.
-
-### Phase 3 — Remove `.cursorrules` (Option B — default)
-
-**Decision: Option B (Removal)**
-
-Once Phase 2 validation passes:
-
-1. Delete root `.cursorrules`.
-2. Commit with message: `chore: remove .cursorrules — replaced by .cursor/rules/*.mdc`.
-3. Verify in a fresh Cursor session that rules still activate correctly without `.cursorrules`.
-
-**Why Option B over A or C:**
-
-| Option | Verdict |
-|--------|---------|
-| **A — Pointer file** | Leaves a "ghost" file that could confuse future agents or Cursor versions into treating it as authoritative. |
-| **B — Remove** | Clean break; `.cursor/rules/` is the sole, verifiable governance layer. **Chosen.** |
-| **C — Keep minimal** | Risk of split-brain: two authoritative sources for the same rules. |
-
-### Phase 4 — CHANGELOG & docs
-
-- [ ] Add `[Unreleased]` entry: `Chore: replace .cursorrules with four scoped .cursor/rules/*.mdc governance files`.
-- [ ] Update `docs/ARCHITECTURE.md` System Design section to reference `.cursor/rules/` as the governance layer.
-- [ ] Note this case study in `docs/decisions/playwright-locators-and-logging.md` under "Framework Smearing" (optional, if the decisions file grows a governance section).
+1. **Author** the `.mdc` files under **`.cursor/rules/`** (done).
+2. **Verify** in Cursor that rules attach for representative files; adjust `globs` if needed (ongoing as the codebase changes).
+3. **Remove** the obsolete single root project-rules file (done 2026-04-23). **Option B (clean removal)** was chosen: no "pointer" file left behind to avoid split-brain.
 
 ---
 
-## Risks & mitigations
+## Risks and mitigations
 
 | Risk | Mitigation |
 |------|------------|
-| `alwaysApply: true` context bloat | Keep `playwright-core-sync.mdc` and `ai-audit-governance.mdc` bodies ≤ 20 lines each. Detail lives in globs-scoped rules. |
+| `alwaysApply: true` context bloat | Keep `playwright-core-sync.mdc` and `gemini-sdk-migration.mdc` short; put detail in globs-scoped rules. |
 | Globs too narrow (rule misses) | Start broad (`pages/**/*.py`); narrow if noise appears in unrelated files. |
-| Duplicate / conflicting instructions between old and new | Phase 1 cross-check table (one bullet → one rule). Delete `.cursorrules` at Phase 3. |
-| `genai-*.mdc` conflict with new `ai-audit-governance.mdc` | Add a `> This rule supersedes …` header in `ai-audit-governance.mdc`. Long term: merge or deprecate the older files. |
+| `ai_audit` policy only when needed | `ai-audit-governance.mdc` is **`alwaysApply: false`** with `globs: ai_audit/**`; the thin `gemini-sdk-migration.mdc` always applies a minimal legacy-SDK block. |
 | LLM still hallucinates (new patterns) | Iteratively add `BANNED:` lines to the relevant rule and document the case study. |
-
----
-
-## Deliverables checklist
-
-- [ ] `.cursor/rules/playwright-core-sync.mdc` (new)
-- [ ] `.cursor/rules/page-object-standards.mdc` (new)
-- [ ] `.cursor/rules/ai-audit-governance.mdc` (new)
-- [ ] `.cursor/rules/test-strategy.mdc` (new)
-- [ ] Root `.cursorrules` **deleted** (Phase 3, after validation)
-- [ ] `CHANGELOG.md` — Unreleased entry added
-- [ ] `docs/ARCHITECTURE.md` — governance layer reference updated
-- [ ] This plan marked complete in repo docs
 
 ---
 
@@ -226,14 +177,14 @@ Once Phase 2 validation passes:
 
 | Decision | Resolution |
 |----------|------------|
-| Number of files | **4** (lean split; avoids context overlap) |
-| Phase 3 strategy | **Option B — Remove** `.cursorrules` |
+| Number of files | **4** core governance files, plus `gemini-sdk-migration.mdc` as a small always-on guard. |
+| Single root rules file | **Removed**; `.cursor/rules/` is the governance layer. |
 | Sync/async governance | **Mandatory `alwaysApply: true` ban** in `playwright-core-sync.mdc` |
-| Gemini SDK source of truth | **`ai-audit-governance.mdc`** (new, supersedes older genai rules for enforcement) |
+| Gemini SDK source of truth | **`ai-audit-governance.mdc`** (canonical policy; `gemini-sdk-migration.mdc` is the thin guard) |
 | Locator strictness | **Documented in `page-object-standards.mdc`** with parent/child union anti-pattern |
 | Resilience mandate | **`get_resilient_locator()` mandatory** in all page objects |
 | Framework smearing | **Addressed** — case study section + sync ban + locator API mandate |
 
 ---
 
-*This document is the Source of Truth for the `.cursor/rules/` governance migration. Update when new hallucination patterns are observed or when existing rules are adjusted post-validation.*
+*Update this document when new hallucination patterns are observed or when rules are adjusted.*

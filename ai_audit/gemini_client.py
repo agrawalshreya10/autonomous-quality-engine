@@ -1,7 +1,7 @@
 """Gemini (Google AI) client for failure analysis via google-genai SDK.
 
 Uses :class:`google.genai.Client` and ``client.models.generate_content`` (not
-``GenerativeModel``). Default model follows ``.cursor/rules/gemini-sdk-migration.mdc``.
+``GenerativeModel``). Default model follows ``.cursor/rules/ai-audit-governance.mdc``.
 """
 
 import logging
@@ -11,7 +11,8 @@ from ai_audit.client import LLMClient
 
 logger = logging.getLogger("ai_audit.gemini")
 
-# Allowed family: gemini-3.1-flash-preview | gemini-3.1-flash-lite-preview (see gemini-sdk-migration.mdc)
+# Allowed family: gemini-3.1-flash-preview | gemini-3.1-flash-lite-preview
+# (canonical rule: .cursor/rules/ai-audit-governance.mdc)
 DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 
 

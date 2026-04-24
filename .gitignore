@@ -43,7 +43,6 @@ playwright-report/
 
 # Cursor — track .cursor/rules, .cursor/skills, .cursor/mcp.json.example; ignore local / scratch
 .cursor/mcp.json
-.cursor/ai-contract/
 .cursor/plans/
 .cursor/user-docs/
 .cursor/**/*.log

@@ -141,7 +141,7 @@ Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell
 AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3.1-flash-lite-preview --artifacts-dir reports
 ```
 
-`gemini-1.5-*` model IDs are **not** supported here (decommissioned); use `gemini-3.1-flash-lite-preview` (default) or `gemini-3.1-flash-preview` as an explicit override. See **`.cursor/rules/gemini-sdk-migration.mdc`**.
+`gemini-1.5-*` model IDs are **not** supported here (decommissioned); use `gemini-3.1-flash-lite-preview` (default) or `gemini-3.1-flash-preview` as an explicit override. See **`.cursor/rules/ai-audit-governance.mdc`** for the canonical policy.
 
 Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `./scripts/run_failure_analyzer.sh --help`).
 
@@ -177,8 +177,8 @@ Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHR
 
 ## Contributing and pull requests
 
-- **Standards:** Follow **`.cursorrules`** (POM, locators, `expect`, logging). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); project snapshot: [docs/PROJECTSTATUS.md](docs/PROJECTSTATUS.md); notable changes: [CHANGELOG.md](CHANGELOG.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
-- **CodeRabbit:** When [CodeRabbit](https://coderabbit.ai) is connected to the repository, use it to catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursorrules`** and the decision docs remain authoritative for merges.
+- **Standards:** Follow **`.cursor/rules/*.mdc`** (POM, locators, `expect`, logging; see `playwright-core-sync.mdc` and `page-object-standards.mdc`). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); project snapshot: [docs/PROJECTSTATUS.md](docs/PROJECTSTATUS.md); notable changes: [CHANGELOG.md](CHANGELOG.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
+- **CodeRabbit:** When [CodeRabbit](https://coderabbit.ai) is connected to the repository, use it to catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursor/rules/`** and the decision docs remain authoritative for merges.
 - **PR template:** Opening a PR loads [`.github/pull_request_template.md`](.github/pull_request_template.md) — complete the checklist and confirm tests were run.
 
 ## License

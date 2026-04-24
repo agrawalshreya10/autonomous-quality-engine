@@ -8,7 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
-_(No changes since [2026-04-19]. New items will be logged here and moved to a release section when promoted.)_
+### Changed
+
+- **Cursor** — Removed root **`.cursorrules`**; project standards are defined in **`.cursor/rules/*.mdc`**. Removed the obsolete **`.cursor/ai-contract/`** folder (local learning notes can live under **`.cursor/user-docs/`**, gitignored).
 
 ## [2026-04-19]
 
@@ -17,7 +19,7 @@ _(No changes since [2026-04-19]. New items will be logged here and moved to a re
 - **`scripts/run_failure_analyzer.sh`** — Runs `ai_audit.failure_analyzer` with **`.venv/bin/python`** so shells where `python3` is **aliased to Homebrew** (common on macOS) still use project dependencies (`python-dotenv`, etc.). Documented in README.
 - **Gemini / Google GenAI SDK doc references** — `docs/reference/gemini-genai-sdk-docs.md` (links to official Gemini libraries page and the Python `genai` generated reference docs); cross-linked from `docs/ARCHITECTURE.md` and `docs/PROJECTSTATUS.md`.
 - **`docs/plan-dependency-determinism.md`** — Plan to pin `google-genai` to exact version (`1.73.1`) for reproducible CI/local installs.
-- **`docs/plan-cursorrules-split.md`** — Plan to split monolithic `.cursorrules` into scoped `.cursor/rules/*.mdc` files.
+- **`docs/plan-cursorrules-split.md`** — Plan to align project standards with scoped **`.cursor/rules/*.mdc`** files (replaces a former single root project-rules file).
 - **`.playwright-browsers/` gitignore** — Added to ignore large local Playwright browser installs.
 
 ### Fixed
@@ -30,7 +32,7 @@ _(No changes since [2026-04-19]. New items will be logged here and moved to a re
 
 - **Repository name** (documentation and packaging): **Autonomous Quality Engine** — `pyproject.toml` project name `autonomous-quality-engine`; README, `docs/ARCHITECTURE.md`, `docs/PROJECTSTATUS.md`, and `config/env.example` titles/paths updated accordingly. Rename the GitHub repository in **Settings** to match when ready.
 - **Dependencies** — `requirements.txt` / `pyproject.toml` pinned **`google-genai==1.73.1`** for deterministic installs; documented that **`google-genai`** is the supported Gemini client (not legacy `google-generativeai`).
-- **Cursor rules** — `.cursor/rules/genai-standards.mdc` updated to reflect `gemini-3.1-flash-lite-preview` as default model for CI/CD analysis.
+- **Cursor rules** — `.cursor/rules/ai-audit-governance.mdc` is the canonical Gemini / AI-audit policy; `.cursor/rules/gemini-sdk-migration.mdc` remains a thin legacy-pattern guard to reduce drift.
 - **Documentation** — `docs/decisions/playwright-locators-and-logging.md` updated with guidance on avoiding **parent + child** `.or_()` unions that trigger strict-mode violations.
 
 ### Documentation
