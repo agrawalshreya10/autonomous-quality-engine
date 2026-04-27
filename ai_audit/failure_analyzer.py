@@ -9,6 +9,7 @@ Or with a failures file:
 """
 
 import argparse
+import logging
 import os
 import re
 import socket
@@ -19,7 +20,9 @@ from dotenv import load_dotenv
 
 from ai_audit.client import LLMClient
 from ai_audit.gemini_client import DEFAULT_GEMINI_MODEL, GeminiClient
-from ai_audit.ollama_client import OllamaClient
+from ai_audit.ollama_client import DEFAULT_OLLAMA_MODEL, OllamaClient
+
+logger = logging.getLogger("ai_audit")
 
 
 def _find_screenshot(artifacts_dir: Path, test_name: str) -> str | None:
@@ -155,7 +158,7 @@ def _effective_provider(cli_client: str) -> str:
 def _resolve_model(provider: str, model: str | None) -> str:
     if model:
         return model
-    return DEFAULT_GEMINI_MODEL if provider == "gemini" else "llama3"
+    return DEFAULT_GEMINI_MODEL if provider == "gemini" else DEFAULT_OLLAMA_MODEL
 
 
 def get_client(provider: str, model: str | None) -> LLMClient | None:
@@ -190,7 +193,7 @@ def main() -> int:
         "--model",
         default=None,
         help=(
-            "Optional model override (Ollama default: llama3, "
+            f"Optional model override (Ollama default: {DEFAULT_OLLAMA_MODEL}, "
             f"Gemini default: {DEFAULT_GEMINI_MODEL})"
         ),
     )
@@ -237,6 +240,15 @@ def main() -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text("\n".join(output_lines))
         print(f"\nWrote suggestions to {args.out}", file=sys.stderr)
+        model_id = getattr(client, "model", "")
+        test_names = [name for name, _, _ in failures]
+        logger.info(
+            "AI audit suggestions written (provider=%s, model=%r, output_path=%s, test_names=%r)",
+            effective_provider,
+            model_id,
+            str(args.out.resolve()),
+            test_names,
+        )
 
     return 0
 

@@ -13,7 +13,7 @@ A debugging session surfaced two areas where **incorrect mental models** waste t
 1. **Interaction logging** — Past-tense “Performed …” lines must not be emitted before the action succeeds.
 2. **`.first` + `.or_()` on locators** — Playwright `Locator` objects are **lazy**; confusing “lazy filter” with “eager resolution” leads to wrong refactors.
 
-This file is the **default checklist** before changing locator chains or logging in `BasePage` and page objects.
+This file is the **default checklist** before changing locator chains or logging in `BasePage` and page objects. Enforcement lives in **`.cursor/rules/page-object-standards.mdc`** and **`.cursor/rules/playwright-core-sync.mdc`**.
 
 ---
 
@@ -96,5 +96,5 @@ If the left locator matches a **container** (e.g. `role=alert`, `.oxd-table-body
 ## References
 
 - `core/base_page.py` — `_run`, `navigate`, `click`, `fill`, `get_resilient_placeholder`
-- `.cursorrules` — `expect`, no `wait_for_timeout`, resilient critical locators
+- **`.cursor/rules/playwright-core-sync.mdc`**, **`.cursor/rules/page-object-standards.mdc`** — enforcing rules for `expect`, no `wait_for_timeout`, resilient critical locators, and strict `.or_()` usage
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — high-level design pointer

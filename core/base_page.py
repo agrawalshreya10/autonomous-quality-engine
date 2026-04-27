@@ -30,7 +30,7 @@ class BasePage:
         self._error_logger = get_logger(f"page.{self.__class__.__name__}")
 
     def _run(self, action: str, context: str, fn: Callable[[], T]) -> T:
-        """Run a page action; on failure log the error with traceback and re-raise (.cursorrules)."""
+        """Run a page action; on failure log the error with traceback and re-raise (see `.cursor/rules/page-object-standards.mdc`)."""
         try:
             return fn()
         except Exception:
