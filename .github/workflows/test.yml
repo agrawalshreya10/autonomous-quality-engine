@@ -76,5 +76,5 @@ jobs:
           echo "## Tests failed" >> $GITHUB_STEP_SUMMARY
           echo "Download the **test-report** artifact to view the HTML report and screenshots." >> $GITHUB_STEP_SUMMARY
           echo "For AI failure analysis, use the separate AI Failure Analysis workflow or run locally:" >> $GITHUB_STEP_SUMMARY
-          echo '  ./scripts/run_failure_analyzer.sh --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY
-          echo '  AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --artifacts-dir ./artifacts' >> $GITHUB_STEP_SUMMARY
+          echo '  ./scripts/run_failure_analyzer.sh --artifacts-dir ./reports' >> $GITHUB_STEP_SUMMARY
+          echo '  AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --artifacts-dir ./reports' >> $GITHUB_STEP_SUMMARY
