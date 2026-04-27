@@ -21,8 +21,8 @@ class Settings(BaseSettings):
         description="OrangeHRM base URL (scheme, host, port, optional path). No trailing slash.",
     )
     ignore_https_errors: bool = Field(
-        default=True,
-        description="Ignore TLS certificate errors (e.g. self-signed HTTPS on localhost).",
+        default=False,
+        description="If true, ignore TLS certificate errors (e.g. self-signed HTTPS on localhost). Default false for safe validation; do not enable against production.",
     )
     browser: Literal["chromium", "firefox", "webkit"] = Field(
         default="chromium",

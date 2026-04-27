@@ -27,7 +27,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
    ```
    Or `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install` for all browsers.
 
-5. **Optional — environment file** — Copy `config/env.example` to `.env` and set `BASE_URL` (scheme, host, port, path—no trailing slash), `IGNORE_HTTPS_ERRORS` for local self-signed HTTPS, plus `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`. Default `BASE_URL` in code targets the public demo if unset (e.g. CI).
+5. **Optional — environment file** — Copy `config/env.example` to `.env` and set `BASE_URL` (scheme, host, port, path—no trailing slash), plus `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`. The template sets **`IGNORE_HTTPS_ERRORS=false`** (full TLS validation); set **`true` only** for local self-signed HTTPS—see the warning block in `config/env.example`. Default `BASE_URL` in code targets the public demo if unset (e.g. CI).
 
 6. **Run tests** (from project root):
    ```bash

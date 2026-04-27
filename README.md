@@ -184,7 +184,7 @@ autonomous-quality-engine/
 
 **OrangeHRM vs. this repo:** `BASE_URL`, `ORANGEHRM_USER`, and `ORANGEHRM_PASSWORD` point at the **OrangeHRM** app you are testing (default: the public demo). They are not separate branding for the Autonomous Quality Engine project itself — see the note at the top of [`config/env.example`](config/env.example).
 
-Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`, `IGNORE_HTTPS_ERRORS` (local HTTPS). For AI audit: `AI_PROVIDER`, `GEMINI_API_KEY` (Gemini), optional `OLLAMA_MODEL` / `OLLAMA_BASE_URL`. See [`config/env.example`](config/env.example).
+Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`, `IGNORE_HTTPS_ERRORS` (template default `false`; set `true` only for local self-signed HTTPS, never for production). For AI audit: `AI_PROVIDER`, `GEMINI_API_KEY` (Gemini), optional `OLLAMA_MODEL` / `OLLAMA_BASE_URL`. See [`config/env.example`](config/env.example) for TLS notes and examples.
 
 ## Contributing and pull requests
 
