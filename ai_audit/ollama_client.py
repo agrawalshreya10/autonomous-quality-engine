@@ -1,11 +1,14 @@
 """Ollama-based LLM client for local failure analysis (requests -> /api/generate)."""
 
 import json
+import logging
 import os
 
 import requests
 
 from ai_audit.client import LLMClient
+
+logger = logging.getLogger("ai_audit.ollama")
 
 # Default when OLLAMA_MODEL is unset and no constructor `model` is passed (keep in sync with failure_analyzer CLI).
 DEFAULT_OLLAMA_MODEL = "llama3"
@@ -37,7 +40,7 @@ class OllamaClient(LLMClient):
             log_snippet=log_snippet,
             screenshot_path=screenshot_path,
         )
-        return self._generate(prompt)
+        return self._generate(prompt, test_name=test_name)
 
     def _build_prompt(
         self,
@@ -71,13 +74,20 @@ class OllamaClient(LLMClient):
         )
         return "\n\n".join(parts)
 
-    def _generate(self, prompt: str) -> str:
+    def _generate(self, prompt: str, test_name: str = "") -> str:
         url = f"{self.base_url}/api/generate"
         body = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
         }
+        logger.info(
+            "Ollama /api/generate start (provider=ollama, model=%r, test_name=%r, base_url=%r, timeout_sec=%s)",
+            self.model,
+            test_name,
+            self.base_url,
+            self.timeout_sec,
+        )
         try:
             resp = requests.post(
                 url,
@@ -86,12 +96,55 @@ class OllamaClient(LLMClient):
                 timeout=self.timeout_sec,
             )
             resp.raise_for_status()
-            data = resp.json()
-            return (data.get("response") or "").strip()
         except requests.exceptions.RequestException as e:
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            logger.error(
+                "Ollama HTTP request failed (test_name=%r, model=%r, status=%s, base_url=%r): %s",
+                test_name,
+                self.model,
+                status,
+                self.base_url,
+                e,
+                exc_info=True,
+            )
+            if status == 404:
+                return (
+                    f"Ollama returned 404 (model or route not found). "
+                    f"Check OLLAMA_MODEL={self.model!r} and that the server is reachable at {self.base_url!r}."
+                )
             return (
                 f"Ollama request failed: {e}. Is Ollama running? "
                 f"Try: ollama serve && ollama pull {self.model}"
             )
-        except Exception as e:
-            return f"Error: {e}"
+
+        try:
+            data = resp.json()
+        except ValueError as e:
+            logger.error(
+                "Ollama response JSON parse failed (test_name=%r, model=%r): %s",
+                test_name,
+                self.model,
+                e,
+                exc_info=True,
+            )
+            return f"Ollama error: invalid JSON in response: {e}"
+
+        if not isinstance(data, dict):
+            logger.warning(
+                "Ollama response JSON was not an object (test_name=%r, model=%r, type=%r)",
+                test_name,
+                self.model,
+                type(data).__name__,
+            )
+            return f"Unexpected Ollama response (not a JSON object): {data!r}"
+
+        text = (data.get("response") or "").strip()
+        if text:
+            return text
+        logger.warning(
+            "Ollama response had no text in \"response\" (test_name=%r, model=%r, data=%r)",
+            test_name,
+            self.model,
+            data,
+        )
+        return f"Unexpected Ollama response (no text): {data!r}"
