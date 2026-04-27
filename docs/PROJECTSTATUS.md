@@ -70,7 +70,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 | **Tests** | 3 smoke + 5 regression (PIM + leave) |
 | **Fixtures** (`tests/conftest.py`) | `page`, `page_factory`, `logged_in_page_factory`, failure screenshots, `failures.txt` |
 | **AI audit** | **Automatic Local Failure Analysis via Ollama** (pytest hook), `GeminiClient` (`gemini-3.1-flash-lite-preview`); `failure_analyzer --client ollama\|gemini` with smart truncation |
-| **CI** (`.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts; separate AI failure analysis workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) |
+| **CI** (`../.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts; separate AI failure analysis workflow ([ai-failure-analysis.yml](../.github/workflows/ai-failure-analysis.yml)) |
 
 There are no `TODO` / `FIXME` markers in first-party project code under `core/`, `config/`, `pages/`, `tests/`, `ai_audit/`, or `utils/`.
 

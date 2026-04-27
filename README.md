@@ -50,7 +50,7 @@ Optional: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`) if you
 
 ### Cursor MCP (optional)
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers, when you add them in your local config, can provide Playwright browser inspection, HTTP fetch, git operations, and database access to Cursor’s AI assistant. **Do not commit** a real [`.cursor/mcp.json`](.cursor/mcp.json) — it often contains **machine paths** and **secrets** (e.g. database URLs). That file is listed in [`.gitignore`](.gitignore).
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers, when you add them in your local config, can provide Playwright browser inspection, HTTP fetch, git operations, and database access to Cursor’s AI assistant. **Do not commit** a real `.cursor/mcp.json` — it often contains **machine paths** and **secrets** (e.g. database URLs). That path is intentionally untracked (see [`.gitignore`](.gitignore)); the only MCP config tracked in the repo is [`.cursor/mcp.json.example`](.cursor/mcp.json.example), which you copy locally as `.cursor/mcp.json`.
 
 **Setup:** copy the example and edit it locally. Cursor reads `.cursor/mcp.json` in this repo; keep your secrets only on your machine.
 
