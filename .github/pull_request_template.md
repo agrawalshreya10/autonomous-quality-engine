@@ -9,6 +9,6 @@
 
 ## Checklist
 
-- [ ] I ran tests locally (`pytest` or at least `pytest -m smoke`).
+- [ ] I ran tests locally (`.venv/bin/pytest` or at least `.venv/bin/pytest -m smoke`).
 - [ ] Page objects use `self.click` / `self.fill` (or other `BasePage` helpers) with descriptive `element_label` where applicable.
 - [ ] No new `wait_for_timeout` calls; UI waits use Playwright auto-wait + `expect` as per `.cursor/rules/playwright-core-sync.mdc`.
