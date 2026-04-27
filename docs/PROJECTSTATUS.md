@@ -8,7 +8,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 ## How to run locally
 
-1. **Python** — Use 3.11+ (see `pyproject.toml` / README).
+1. **Python** — Use 3.12+ (see `pyproject.toml` / README).
 
 2. **Create and activate a virtual environment** (from project root):
    ```bash
@@ -18,24 +18,24 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 3. **Install dependencies:**
    ```bash
-   pip install -r requirements.txt
+   .venv/bin/pip install -r requirements.txt
    ```
 
 4. **Install Playwright browsers** (required once per machine):
    ```bash
-   playwright install chromium
+   PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chromium
    ```
-   Or `playwright install` for all browsers.
+   Or `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install` for all browsers.
 
 5. **Optional — environment file** — Copy `config/env.example` to `.env` and set `BASE_URL` (scheme, host, port, path—no trailing slash), `IGNORE_HTTPS_ERRORS` for local self-signed HTTPS, plus `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`. Default `BASE_URL` in code targets the public demo if unset (e.g. CI).
 
 6. **Run tests** (from project root):
    ```bash
-   pytest
-   pytest -m smoke
-   pytest -n auto
-   pytest tests/smoke/
-   pytest tests/regression/ -m pim
+   .venv/bin/pytest
+   .venv/bin/pytest -m smoke
+   .venv/bin/pytest -n auto
+   .venv/bin/pytest tests/smoke/
+   .venv/bin/pytest tests/regression/ -m pim
    ```
 
 7. **Reports** — `reports/report.html`, `reports/screenshots/` (on failure), `reports/failures.txt` (for AI audit). After a **local** failed run with Ollama up, `reports/ai_suggestions.md` holds model output (same path when using `--out` manually).
