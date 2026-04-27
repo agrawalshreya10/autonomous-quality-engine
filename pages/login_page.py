@@ -35,29 +35,41 @@ class LoginPage(BasePage):
 
     def login(self, username: str, password: str) -> DashboardPage:
         """Enter credentials, click Login, return Dashboard page object."""
-        self.navigate()
-        self.fill(self.username_input, username, element_label="Username field")
-        self.fill(self.password_input, password, element_label="Password field")
-        self.click(self.login_button, element_label="Login button")
-        return DashboardPage(self._page, self._settings)
+        try:
+            self.navigate()
+            self.fill(self.username_input, username, element_label="Username field")
+            self.fill(self.password_input, password, element_label="Password field")
+            self.click(self.login_button, element_label="Login button")
+            return DashboardPage(self._page, self._settings)
+        except Exception:
+            self._error_logger.exception("login failed")
+            raise
 
     def get_error_text(self) -> str:
         """Return visible login error text if present; waits for the alert (web-first)."""
-        # is_visible() does not wait; the alert often appears after the failed login response.
         try:
-            expect(self.error_message).to_be_visible(timeout=self._settings.timeout_ms)
-        except TimeoutError:
-            # No login error displayed (expected for successful login flows).
-            return ""
+            # is_visible() does not wait; the alert often appears after the failed login response.
+            try:
+                expect(self.error_message).to_be_visible(timeout=self._settings.timeout_ms)
+            except TimeoutError:
+                # No login error displayed (expected for successful login flows).
+                return ""
+            except Exception:
+                # Unexpected Playwright/runtime error: log and re-raise (see `.cursor/rules/page-object-standards.mdc`).
+                self._error_logger.exception("Failed to read login error alert text")
+                raise
+            return self.get_text(self.error_message, element_label="Login error alert")
         except Exception:
-            # Unexpected Playwright/runtime error: log and re-raise per .cursorrules.
-            self._error_logger.exception("Failed to read login error alert text")
+            self._error_logger.exception("get_error_text failed")
             raise
-        return self.get_text(self.error_message, element_label="Login error alert")
 
     def is_login_page_visible(self) -> bool:
         """True if username field and login button are visible."""
-        return self.is_visible(self.username_input, element_label="Username field") and self.is_visible(
-            self.login_button,
-            element_label="Login button",
-        )
+        try:
+            return self.is_visible(self.username_input, element_label="Username field") and self.is_visible(
+                self.login_button,
+                element_label="Login button",
+            )
+        except Exception:
+            self._error_logger.exception("is_login_page_visible failed")
+            raise

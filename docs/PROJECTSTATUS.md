@@ -1,6 +1,6 @@
 # Autonomous Quality Engine — project status
 
-**Last updated:** 2026-04-06 — Roadmap phased (P1 Docker, P2 Faker data, **P3 CI/CD + Allure reporting**); see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
+**Last updated:** 2026-04-27 — Roadmap phased (P1 Docker, P2 Faker data, **P3 CI/CD + Allure reporting**); see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
 
 This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly. **Chronological notable changes** are recorded in [CHANGELOG.md](../CHANGELOG.md) at the repository root.
 
@@ -8,7 +8,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 ## How to run locally
 
-1. **Python** — Use 3.11+ (see `pyproject.toml` / README).
+1. **Python** — Use 3.12+ (see `pyproject.toml` / README).
 
 2. **Create and activate a virtual environment** (from project root):
    ```bash
@@ -18,24 +18,24 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 3. **Install dependencies:**
    ```bash
-   pip install -r requirements.txt
+   .venv/bin/pip install -r requirements.txt
    ```
 
 4. **Install Playwright browsers** (required once per machine):
    ```bash
-   playwright install chromium
+   PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chromium
    ```
-   Or `playwright install` for all browsers.
+   Or `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install` for all browsers.
 
-5. **Optional — environment file** — Copy `config/env.example` to `.env` and set `BASE_URL` (scheme, host, port, path—no trailing slash), `IGNORE_HTTPS_ERRORS` for local self-signed HTTPS, plus `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`. Default `BASE_URL` in code targets the public demo if unset (e.g. CI).
+5. **Optional — environment file** — Copy `config/env.example` to `.env` and set `BASE_URL` (scheme, host, port, path—no trailing slash), plus `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`. The template sets **`IGNORE_HTTPS_ERRORS=false`** (full TLS validation); set **`true` only** for local self-signed HTTPS—see the warning block in `config/env.example`. Default `BASE_URL` in code targets the public demo if unset (e.g. CI).
 
 6. **Run tests** (from project root):
    ```bash
-   pytest
-   pytest -m smoke
-   pytest -n auto
-   pytest tests/smoke/
-   pytest tests/regression/ -m pim
+   .venv/bin/pytest
+   .venv/bin/pytest -m smoke
+   .venv/bin/pytest -n auto
+   .venv/bin/pytest tests/smoke/
+   .venv/bin/pytest tests/regression/ -m pim
    ```
 
 7. **Reports** — `reports/report.html`, `reports/screenshots/` (on failure), `reports/failures.txt` (for AI audit). After a **local** failed run with Ollama up, `reports/ai_suggestions.md` holds model output (same path when using `--out` manually).
@@ -70,7 +70,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 | **Tests** | 3 smoke + 5 regression (PIM + leave) |
 | **Fixtures** (`tests/conftest.py`) | `page`, `page_factory`, `logged_in_page_factory`, failure screenshots, `failures.txt` |
 | **AI audit** | **Automatic Local Failure Analysis via Ollama** (pytest hook), `GeminiClient` (`gemini-3.1-flash-lite-preview`); `failure_analyzer --client ollama\|gemini` with smart truncation |
-| **CI** (`.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts; separate AI failure analysis workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) |
+| **CI** (`../.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts; separate AI failure analysis workflow ([ai-failure-analysis.yml](../.github/workflows/ai-failure-analysis.yml)) |
 
 There are no `TODO` / `FIXME` markers in first-party project code under `core/`, `config/`, `pages/`, `tests/`, `ai_audit/`, or `utils/`.
 
@@ -82,7 +82,7 @@ There are no `TODO` / `FIXME` markers in first-party project code under `core/`,
 
 2. **`utils/` integration** — **Resolved:** `truncate_for_log`, interaction loggers, and `BasePage` are wired; all page objects route critical actions through `self.click` / `self.fill` with descriptive `element_label` values.
 
-3. **`ai_audit` backends** — **Resolved:** `LLMClient` is implemented by **Ollama** (default, local) and **Gemini** (`GeminiClient`, `GEMINI_API_KEY`, `--client gemini`). Default Gemini model is **`gemini-3.1-flash-lite-preview`** (see `.cursor/rules/gemini-sdk-migration.mdc`).
+3. **`ai_audit` backends** — **Resolved:** `LLMClient` is implemented by **Ollama** (default, local) and **Gemini** (`GeminiClient`, `GEMINI_API_KEY`, `--client gemini`). Default Gemini model is **`gemini-3.1-flash-lite-preview`** (see `.cursor/rules/ai-audit-governance.mdc`).
 
 4. **Test rigor** — Some assertions are loose (e.g. PIM search allows zero rows; add-employee uses fixed names).
 

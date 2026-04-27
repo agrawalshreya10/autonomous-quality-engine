@@ -4,7 +4,7 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 
 **System under test (default):** the **public demo** only — base URL `https://opensource-demo.orangehrmlive.com/` (e.g. [demo login](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login)). CI and the default `BASE_URL` in [`config/env.example`](config/env.example) use this host. The suite is **not** aimed at OrangeHRM’s marketing site, customer production tenants, or any live product URL other than that shared demo (or whatever you set in `BASE_URL` for local/Docker instances).
 
-*Product reference:* [OrangeHRM](https://www.orangehrm.com/) (vendor / product information only, not an automation target.)
+*Product reference:* [OrangeHRM](https://www.orangehrm.com/) (for product information only; the vendor site is not a test target).
 
 ## Features
 
@@ -14,56 +14,78 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 - **Reporting**: pytest-html report in `reports/`; screenshots on failure
 - **CI/CD**: GitHub Actions on push/PR; smoke job + full suite; upload reports as artifacts
 - **AI audit**: **Ollama** (local) or **Gemini** (cloud); optional auto-run after local failures; see [AI failure analysis](#ai-failure-analysis)
+- **Docs map**: [`docs/README.md`](docs/README.md) links architecture, decisions, historical plans, and reference notes.
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.12+
 - Playwright browsers (see below)
 
 ## Setup
+
+Use a **Python 3.12+** interpreter (see `pyproject.toml`). Prefer **explicit `.venv/bin/...` paths** for installs and Playwright so you never hit macOS **Homebrew `python3` / `pip` aliases** that skip the project venv.
 
 ```bash
 # Clone and enter project
 cd autonomous-quality-engine
 
-# Create venv and install dependencies
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+# Create venv (pick the command that resolves to Python 3.12+ on your machine)
+python3.12 -m venv .venv
+# or: python3 -m venv .venv
 
-# Install Playwright browsers (required once)
-playwright install chromium
-# Or: playwright install  # all browsers
+# Install dependencies (no need to activate the venv first)
+.venv/bin/python -m pip install -U pip
+.venv/bin/pip install -r requirements.txt
+
+# Install Playwright browsers (required once; browsers live under .playwright-browsers/)
+PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chromium
+# Or all browsers:
+# PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install
 
 # Optional: copy env template and adjust
 cp config/env.example .env
 ```
 
+Optional: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`) if you prefer shorter commands in an interactive shell; the **Running tests** section still uses `.venv/bin/pytest` so behavior matches CI and project rules without relying on activation.
+
+### Cursor MCP (optional)
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers, when you add them in your local config, can provide Playwright browser inspection, HTTP fetch, git operations, and database access to Cursor’s AI assistant. **Do not commit** a real `.cursor/mcp.json` — it often contains **machine paths** and **secrets** (e.g. database URLs). That path is intentionally untracked (see [`.gitignore`](.gitignore)); the only MCP config tracked in the repo is [`.cursor/mcp.json.example`](.cursor/mcp.json.example), which you copy locally as `.cursor/mcp.json`.
+
+**Setup:** copy the example and edit it locally. Cursor reads `.cursor/mcp.json` in this repo; keep your secrets only on your machine.
+
+```bash
+cp .cursor/mcp.json.example .cursor/mcp.json
+# Edit .cursor/mcp.json: set git repo path, MYSQL_URL, or remove servers you do not use.
+```
+
+The committed **[`.cursor/mcp.json.example`](.cursor/mcp.json.example)** shows the same *shape* as a typical config (Playwright MCP, optional fetch, git, optional MySQL). Replace placeholders; use `npx` for `command` where possible so paths match other developers. Remove any server block you do not need.
+
 ## Running tests
 
-Use the project virtualenv so Playwright, **python-dotenv**, and other dependencies resolve (`source .venv/bin/activate`, or invoke `.venv/bin/pytest` / `.venv/bin/python` directly).
+Always run **`.venv/bin/pytest`** (or activate the venv and still use the prefix when unsure). Do not rely on a bare `pytest` on PATH — on macOS it often picks the wrong environment.
 
 ```bash
 # All tests (report in reports/report.html)
-pytest
+.venv/bin/pytest
 
 # Smoke only (fast)
-pytest -m smoke
+.venv/bin/pytest -m smoke
 
 # Full regression marker
-pytest -m regression
+.venv/bin/pytest -m regression
 
 # Module markers (see pyproject.toml)
-pytest tests/regression/ -m pim
-pytest tests/regression/ -m leave
+.venv/bin/pytest tests/regression/ -m pim
+.venv/bin/pytest tests/regression/ -m leave
 
 # Parallel (multiple workers)
-pytest -n auto
-# Or: pytest -n 4
+.venv/bin/pytest -n auto
+# Or: .venv/bin/pytest -n 4
 
 # Specific directories
-pytest tests/smoke/
-pytest tests/regression/
+.venv/bin/pytest tests/smoke/
+.venv/bin/pytest tests/regression/
 ```
 
 ## CI/CD (GitHub Actions)
@@ -71,7 +93,7 @@ pytest tests/regression/
 - **Trigger**: Push or PR to `main`/`master`; or run manually via **Actions** tab.
 - **Workflow** [`.github/workflows/test.yml`](.github/workflows/test.yml) (**Test Suite**):
   - **smoke**: Runs `pytest -m smoke`, uploads `smoke-report` artifact.
-  - **test**: Full suite with `pytest -n auto`, uploads `test-report-3.11` artifact.
+  - **test**: Full suite with `pytest -n auto`, uploads `test-report-3.12` artifact.
 - **Artifacts**: Download from the run summary to get `reports/report.html` and `reports/screenshots/`.
 - **AI failure analysis (CI)**: On **Test Suite** failure, [`.github/workflows/ai-failure-analysis.yml`](.github/workflows/ai-failure-analysis.yml) downloads artifacts from that run and can run Gemini-based analysis. Requires repository secrets **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT with **Actions: Read** on the repo — `GITHUB_TOKEN` cannot download another run’s artifacts) and optional **`GEMINI_API_KEY`**. See [docs/decisions/ci-ai-failure-analysis.md](docs/decisions/ci-ai-failure-analysis.md) and [reference/github-actions-trigger-workflow.md](docs/reference/github-actions-trigger-workflow.md). Run the analyzer locally using the commands in [AI failure analysis](#ai-failure-analysis).
 
@@ -89,12 +111,14 @@ Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gem
 .venv/bin/python -m ai_audit.failure_analyzer --help
 ```
 
-If `.venv` is missing or dependencies are not installed, from the **repository root**:
+If `.venv` is missing or dependencies are not installed, from the **repository root** (use a **3.12+** interpreter to create the venv):
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
+# or: python3 -m venv .venv
 .venv/bin/python -m pip install -U pip
 .venv/bin/python -m pip install -r requirements.txt
+PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chromium
 ```
 
 ### Local Ollama (default)
@@ -124,8 +148,11 @@ python3 -m venv .venv
 Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell). CI uses the same variables in the AI Failure Analysis workflow.
 
 ```bash
+# --model optional: omit to use DEFAULT_GEMINI_MODEL in ai_audit/gemini_client.py (gemini-3.1-flash-lite-preview)
 AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3.1-flash-lite-preview --artifacts-dir reports
 ```
+
+`gemini-1.5-*` model IDs are **not** supported here (decommissioned); use `gemini-3.1-flash-lite-preview` (default) or `gemini-3.1-flash-preview` as an explicit override. See **`.cursor/rules/ai-audit-governance.mdc`** for the canonical policy.
 
 Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `./scripts/run_failure_analyzer.sh --help`).
 
@@ -133,6 +160,7 @@ Optional one-shot override without changing `.env`: `--client gemini` or `--clie
 
 ```
 autonomous-quality-engine/
+├── .cursor/mcp.json.example                    # Commit: sample MCP config (copy to .cursor/mcp.json)
 ├── .github/workflows/test.yml                 # CI: smoke + full test (Test Suite)
 ├── .github/workflows/ai-failure-analysis.yml  # Optional Gemini analysis after Test Suite failure
 ├── scripts/run_failure_analyzer.sh            # Run analyzer with .venv (avoids macOS python3 alias issues)
@@ -156,14 +184,14 @@ autonomous-quality-engine/
 
 **OrangeHRM vs. this repo:** `BASE_URL`, `ORANGEHRM_USER`, and `ORANGEHRM_PASSWORD` point at the **OrangeHRM** app you are testing (default: the public demo). They are not separate branding for the Autonomous Quality Engine project itself — see the note at the top of [`config/env.example`](config/env.example).
 
-Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`, `IGNORE_HTTPS_ERRORS` (local HTTPS). For AI audit: `AI_PROVIDER`, `GEMINI_API_KEY` (Gemini), optional `OLLAMA_MODEL` / `OLLAMA_BASE_URL`. See [`config/env.example`](config/env.example).
+Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`, `IGNORE_HTTPS_ERRORS` (template default `false`; set `true` only for local self-signed HTTPS, never for production). For AI audit: `AI_PROVIDER`, `GEMINI_API_KEY` (Gemini), optional `OLLAMA_MODEL` / `OLLAMA_BASE_URL`. See [`config/env.example`](config/env.example) for TLS notes and examples.
 
 ## Contributing and pull requests
 
-- **Standards:** Follow **`.cursorrules`** (POM, locators, `expect`, logging). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); project snapshot: [docs/PROJECTSTATUS.md](docs/PROJECTSTATUS.md); notable changes: [CHANGELOG.md](CHANGELOG.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
-- **CodeRabbit:** When [CodeRabbit](https://coderabbit.ai) is connected to the repository, use it to catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursorrules`** and the decision docs remain authoritative for merges.
+- **Standards:** Follow **`.cursor/rules/*.mdc`** (POM, locators, `expect`, logging; see `playwright-core-sync.mdc` and `page-object-standards.mdc`). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); project snapshot: [docs/PROJECTSTATUS.md](docs/PROJECTSTATUS.md); notable changes: [CHANGELOG.md](CHANGELOG.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
+- **CodeRabbit:** [CodeRabbit](https://coderabbit.ai) is configured for the GitHub repository and can catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursor/rules/`** and the decision docs remain authoritative for merges.
 - **PR template:** Opening a PR loads [`.github/pull_request_template.md`](.github/pull_request_template.md) — complete the checklist and confirm tests were run.
 
 ## License
 
-This repository is released under the [MIT License](LICENSE). Use as needed for learning and portfolio. OrangeHRM is a trademark of OrangeHRM Inc.
+This repository is released under the [MIT License](LICENSE). Original portfolio project by Shreya Agrawal. OrangeHRM is a trademark of OrangeHRM Inc.

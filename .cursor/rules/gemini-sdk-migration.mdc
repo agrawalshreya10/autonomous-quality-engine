@@ -1,0 +1,21 @@
+---
+description: Guards against legacy Gemini SDK patterns; canonical policy lives in ai-audit-governance.mdc
+globs: ai_audit/**/*.py, **/gemini_client.py
+alwaysApply: true
+---
+
+# Gemini SDK Migration Guard
+
+Use this file only to block legacy Gemini patterns during edits in `ai_audit/`.
+
+For the canonical package, model, and initialization requirements, follow **`ai-audit-governance.mdc` section 2**.
+
+## Blocked legacy patterns
+
+- **Library:** `google-generativeai`
+- **Pattern:** `genai.GenerativeModel()`
+- **Decommissioned model IDs:** `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-1.0-pro`
+
+## Enforcement action
+
+If you see one of the blocked legacy patterns above, stop and migrate the code to the `google-genai` + `genai.Client(...)` flow defined in **`ai-audit-governance.mdc` section 2**.
