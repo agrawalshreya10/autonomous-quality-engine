@@ -56,7 +56,7 @@ page.querySelector(".foo")               # JS API — not Python
 
 - Use `expect(locator)` for **all UI state checks** (web-first, auto-waiting).
 - `assert` is for non-UI logic only (API responses, data comparisons).
-- **`page.wait_for_timeout()` is banned.** Use `expect(...).to_be_visible()` or condition-based waits.
+- **`page.wait_for_timeout()`** exists on the Playwright Python sync `Page`, but it is an **anti-pattern** for stable tests (fixed sleeps, race-prone). **This project prohibits it** in `pages/`, `core/`, and `tests/`. Prefer **`expect(locator).to_be_visible()`** (and other `expect(...)` assertions) or **condition-based waits** aligned with UI state. Playwright documents `wait_for_timeout` as appropriate mainly for **debugging**, not as the primary way to synchronize tests — see https://playwright.dev/python/docs/api/class-page#page-wait-for-timeout
 
 ## Execution
 

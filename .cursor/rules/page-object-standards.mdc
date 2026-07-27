@@ -157,7 +157,17 @@ A failed action must **not** appear as a successful interaction in logs.
 
 ## Error Handling
 
-Every public page method must use try/except, log via `self._error_logger`, and re-raise.
+### When try/except is required
+
+Add `try/except` + `self._error_logger.exception(...)` + re-raise **only** when the method:
+
+- Performs logic **outside** `BasePage` helpers (parsing, branching, loops, multi-step workflows where you want one cohesive error message).
+- **Bypasses** `BasePage` helpers and calls Playwright APIs directly (not recommended).
+- Intentionally handles an **expected** exception and returns a safe value (e.g., return `""` on `TimeoutError` when an error banner is optional).
+
+### When try/except is not needed
+
+If a page method fully delegates interactions to `BasePage` helpers like `self.click`, `self.fill`, `self.get_text`, `self.wait_for_visible`, etc., it does **not** need an additional `try/except`: `BasePage._run_logged` already logs failures and re-raises so tests fail correctly.
 
 ```python
 # ✅ CORRECT

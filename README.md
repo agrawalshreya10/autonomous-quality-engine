@@ -18,31 +18,39 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.12+
 - Playwright browsers (see below)
 
 ## Setup
+
+Use a **Python 3.12+** interpreter (see `pyproject.toml`). Prefer **explicit `.venv/bin/...` paths** for installs and Playwright so you never hit macOS **Homebrew `python3` / `pip` aliases** that skip the project venv.
 
 ```bash
 # Clone and enter project
 cd autonomous-quality-engine
 
-# Create venv and install dependencies
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+# Create venv (pick the command that resolves to Python 3.12+ on your machine)
+python3.12 -m venv .venv
+# or: python3 -m venv .venv
 
-# Install Playwright browsers (required once)
-playwright install chromium
-# Or: playwright install  # all browsers
+# Install dependencies (no need to activate the venv first)
+.venv/bin/python -m pip install -U pip
+.venv/bin/pip install -r requirements.txt
+
+# Install Playwright browsers (required once; browsers live under .playwright-browsers/)
+PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chromium
+# Or all browsers:
+# PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install
 
 # Optional: copy env template and adjust
 cp config/env.example .env
 ```
 
+Optional: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`) if you prefer shorter commands in an interactive shell; the **Running tests** section still uses `.venv/bin/pytest` so behavior matches CI and project rules without relying on activation.
+
 ### Cursor MCP (optional)
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers, when you add them in your local config, can provide Playwright browser inspection, HTTP fetch, git operations, and database access to Cursor’s AI assistant. **Do not commit** a real [`.cursor/mcp.json`](.cursor/mcp.json) — it often contains **machine paths** and **secrets** (e.g. database URLs). That file is listed in [`.gitignore`](.gitignore).
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers, when you add them in your local config, can provide Playwright browser inspection, HTTP fetch, git operations, and database access to Cursor’s AI assistant. **Do not commit** a real `.cursor/mcp.json` — it often contains **machine paths** and **secrets** (e.g. database URLs). That path is intentionally untracked (see [`.gitignore`](.gitignore)); the only MCP config tracked in the repo is [`.cursor/mcp.json.example`](.cursor/mcp.json.example), which you copy locally as `.cursor/mcp.json`.
 
 **Setup:** copy the example and edit it locally. Cursor reads `.cursor/mcp.json` in this repo; keep your secrets only on your machine.
 
@@ -55,29 +63,29 @@ The committed **[`.cursor/mcp.json.example`](.cursor/mcp.json.example)** shows t
 
 ## Running tests
 
-Use the project virtualenv so Playwright, **python-dotenv**, and other dependencies resolve (`source .venv/bin/activate`, or invoke `.venv/bin/pytest` / `.venv/bin/python` directly).
+Always run **`.venv/bin/pytest`** (or activate the venv and still use the prefix when unsure). Do not rely on a bare `pytest` on PATH — on macOS it often picks the wrong environment.
 
 ```bash
 # All tests (report in reports/report.html)
-pytest
+.venv/bin/pytest
 
 # Smoke only (fast)
-pytest -m smoke
+.venv/bin/pytest -m smoke
 
 # Full regression marker
-pytest -m regression
+.venv/bin/pytest -m regression
 
 # Module markers (see pyproject.toml)
-pytest tests/regression/ -m pim
-pytest tests/regression/ -m leave
+.venv/bin/pytest tests/regression/ -m pim
+.venv/bin/pytest tests/regression/ -m leave
 
 # Parallel (multiple workers)
-pytest -n auto
-# Or: pytest -n 4
+.venv/bin/pytest -n auto
+# Or: .venv/bin/pytest -n 4
 
 # Specific directories
-pytest tests/smoke/
-pytest tests/regression/
+.venv/bin/pytest tests/smoke/
+.venv/bin/pytest tests/regression/
 ```
 
 ## CI/CD (GitHub Actions)
@@ -85,7 +93,7 @@ pytest tests/regression/
 - **Trigger**: Push or PR to `main`/`master`; or run manually via **Actions** tab.
 - **Workflow** [`.github/workflows/test.yml`](.github/workflows/test.yml) (**Test Suite**):
   - **smoke**: Runs `pytest -m smoke`, uploads `smoke-report` artifact.
-  - **test**: Full suite with `pytest -n auto`, uploads `test-report-3.11` artifact.
+  - **test**: Full suite with `pytest -n auto`, uploads `test-report-3.12` artifact.
 - **Artifacts**: Download from the run summary to get `reports/report.html` and `reports/screenshots/`.
 - **AI failure analysis (CI)**: On **Test Suite** failure, [`.github/workflows/ai-failure-analysis.yml`](.github/workflows/ai-failure-analysis.yml) downloads artifacts from that run and can run Gemini-based analysis. Requires repository secrets **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT with **Actions: Read** on the repo — `GITHUB_TOKEN` cannot download another run’s artifacts) and optional **`GEMINI_API_KEY`**. See [docs/decisions/ci-ai-failure-analysis.md](docs/decisions/ci-ai-failure-analysis.md) and [reference/github-actions-trigger-workflow.md](docs/reference/github-actions-trigger-workflow.md). Run the analyzer locally using the commands in [AI failure analysis](#ai-failure-analysis).
 
@@ -103,12 +111,14 @@ Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gem
 .venv/bin/python -m ai_audit.failure_analyzer --help
 ```
 
-If `.venv` is missing or dependencies are not installed, from the **repository root**:
+If `.venv` is missing or dependencies are not installed, from the **repository root** (use a **3.12+** interpreter to create the venv):
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
+# or: python3 -m venv .venv
 .venv/bin/python -m pip install -U pip
 .venv/bin/python -m pip install -r requirements.txt
+PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chromium
 ```
 
 ### Local Ollama (default)
@@ -174,7 +184,7 @@ autonomous-quality-engine/
 
 **OrangeHRM vs. this repo:** `BASE_URL`, `ORANGEHRM_USER`, and `ORANGEHRM_PASSWORD` point at the **OrangeHRM** app you are testing (default: the public demo). They are not separate branding for the Autonomous Quality Engine project itself — see the note at the top of [`config/env.example`](config/env.example).
 
-Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`, `IGNORE_HTTPS_ERRORS` (local HTTPS). For AI audit: `AI_PROVIDER`, `GEMINI_API_KEY` (Gemini), optional `OLLAMA_MODEL` / `OLLAMA_BASE_URL`. See [`config/env.example`](config/env.example).
+Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`, `IGNORE_HTTPS_ERRORS` (template default `false`; set `true` only for local self-signed HTTPS, never for production). For AI audit: `AI_PROVIDER`, `GEMINI_API_KEY` (Gemini), optional `OLLAMA_MODEL` / `OLLAMA_BASE_URL`. See [`config/env.example`](config/env.example) for TLS notes and examples.
 
 ## Contributing and pull requests
 

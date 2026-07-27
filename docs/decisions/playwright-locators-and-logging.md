@@ -65,9 +65,23 @@ When **both** placeholders could match different elements in the same DOM, `.fir
 - Prefer verifying behavior against a real page (local OrangeHRM / demo) rather than guessing locator algebra.
 - Use **Playwright MCP** (see below) to inspect structure and reduce trial-and-error.
 
-### `.or_()` must not pair **parent** and **child** of the same widget
+### Parent+child anti-pattern in `.or_()`
 
-If the left locator matches a **container** (e.g. `role=alert`, `.oxd-table-body`) and the right matches a **node inside it** (e.g. `.oxd-alert-content-text`, `get_by_text("No Records Found")`), the union can resolve to **two** elements at once. `expect(locator)` and other strict operations then fail. Prefer a **single** locator (e.g. the inner text node only) or wait for **one** stable container that is always present when the view loads.
+If the left locator matches a **container** (e.g. `role=alert`, `.oxd-table-body`) and the right matches a **node inside it** (e.g. `.oxd-alert-content-text`, `get_by_text("No Records Found")`), the union can resolve to **two** elements at once because **both** the parent and the child are in the DOM together. `expect(locator)` and other strict operations then fail with a multi-match error.
+
+**Anti-pattern** (parent ∪ child of the same widget—both locators can match at once):
+
+```python
+page.locator(".oxd-table-body").or_(page.get_by_text("No Records Found"))
+```
+
+**Preferred** (target the **leaf** that carries the user-visible state you are asserting, so the locator resolves to a single node):
+
+```python
+page.get_by_text("No Records Found")
+```
+
+The same idea applies to alerts: do not union `get_by_role("alert")` with `locator(".oxd-alert-content-text")` when both match one banner—use the inner text node (or one non-overlapping locator) only.
 
 ---
 
