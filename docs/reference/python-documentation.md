@@ -2,7 +2,7 @@
 
 **Source:** [Python 3 documentation](https://docs.python.org/3/) (python.org — version-specific builds, e.g. 3.12.x, 3.14.x)
 
-**Purpose:** Map the official doc **landing page** to common tasks. This repo targets **Python 3.12+** per `.cursorrules`; pick the matching minor doc version from the site’s version switcher when behavior differs between releases.
+**Purpose:** Map the official doc **landing page** to common tasks. This repo targets **Python 3.12+** (see `playwright-core-sync.mdc` in `.cursor/rules/`); pick the matching minor doc version from the site’s version switcher when behavior differs between releases.
 
 ---
 

@@ -41,8 +41,11 @@ playwright-report/
 *.trace
 *.zip
 
-# Cursor (local notes, business secrets, future plans, temporary files, AI skills — not shipped)
-.cursor/
+# Cursor — track .cursor/rules, .cursor/skills, .cursor/mcp.json.example; ignore local / scratch
+.cursor/mcp.json
+.cursor/plans/
+.cursor/user-docs/
+.cursor/**/*.log
 
 # IDE
 .idea/

@@ -21,6 +21,6 @@
 ## Project alignment
 
 - The repo’s Gemini integration is implemented under `ai_audit/` and should follow the **Google GenAI SDK** guidance above.
-- Default model for failure analysis in this repo: **`gemini-3.1-flash-lite-preview`** (allowed alternatives in **gemini-sdk-migration.mdc** include **`gemini-3.1-flash-preview`**).
+- Default model for failure analysis in this repo: **`gemini-3.1-flash-lite-preview`** (allowed alternatives are defined in **`.cursor/rules/ai-audit-governance.mdc`**).
 - For CI behavior and redaction strategy, see [../decisions/ci-ai-failure-analysis.md](../decisions/ci-ai-failure-analysis.md).
 

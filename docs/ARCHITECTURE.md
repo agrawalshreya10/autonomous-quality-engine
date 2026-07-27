@@ -36,7 +36,7 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 - **Component Pattern**: Large pages are decomposed into reusable components in `pages/components/`.
 
 ## AI Integration
-- **Rationale (CI + cloud LLM):** Recorded in [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md) — adopted approach **B + D** (on-demand analysis in CI; redacted, minimal publication surface). Interview-oriented talking points live locally under `.cursor/interview-prep/ci-ai-failure-analysis.md` (gitignored; not in the remote repo).
+- **Rationale (CI + cloud LLM):** Recorded in [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md) — adopted approach **B + D** (on-demand analysis in CI; redacted, minimal publication surface). Interview-oriented talking points can live locally under **`.cursor/user-docs/ci-ai-failure-analysis.md`** (gitignored; not in the remote repo).
 - **Local Development**: **Automatic Local Failure Analysis via Ollama** — pytest hook auto-triggers analysis on test failures with smart truncation (2K char limit), Ollama health check (port 11434), and enhanced Quality Architect prompts; model output is persisted to `reports/ai_suggestions.md`.
 - **AI Audit**: Ollama locally (automatic + manual); optional Gemini (default model ID matches `DEFAULT_GEMINI_MODEL` in [`ai_audit/gemini_client.py`](../ai_audit/gemini_client.py), currently `gemini-3.1-flash-lite-preview`) via `GEMINI_API_KEY` when invoking the analyzer.
 - **CLI**: `python -m ai_audit.failure_analyzer --client gemini --artifacts-dir reports` (or `--client ollama`).
@@ -58,7 +58,7 @@ Development is grouped into **phases**; items below stay numbered for easy refer
 
 ### Later / cross-cutting
 5. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
-6. **CodeRabbit Integration** *(planned)*: AI-powered PR reviews on GitHub, configured to enforce `.cursorrules` standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or()` on critical locators).
+6. **CodeRabbit Integration** *(configured)*: AI-powered PR reviews on GitHub, aligned with **`.cursor/rules/*.mdc`** standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or_()` on critical locators).
 7. **Gemini AI Audit in CI** *(completed)*: `GeminiClient` and `failure_analyzer` are implemented; workflows now match **B + D** (separate on-demand analysis workflow + redacted single surface) per [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md). See [ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml).
 
 ## GitHub documentation (reference summaries)

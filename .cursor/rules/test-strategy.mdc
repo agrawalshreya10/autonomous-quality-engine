@@ -1,0 +1,104 @@
+---
+description: Standards for atomic test design, data isolation, and parallel execution.
+globs: tests/**/*.py, data/**
+alwaysApply: false
+---
+
+# Test Strategy
+
+## Relationship to other rules
+
+- **Playwright sync API, no `wait_for_timeout`, `expect()` for UI:** see **`playwright-core-sync.mdc`**.
+- **Page interactions and locators:** see **`page-object-standards.mdc`**.
+- **AI failure analysis after local runs:** `pytest_sessionfinish` in `tests/conftest.py` invokes `ai_audit.failure_analyzer`; see **`ai-audit-governance.mdc`**.
+
+---
+
+## 1. Data strategy and isolation
+
+### No hardcoding in test steps
+
+| Forbidden in `tests/**/*.py` | Use instead |
+|------------------------------|-------------|
+| Literal URLs (`https://…`, `http://localhost:8080/...`) | Prefer **`get_settings().base_url`** for the **environment-specific host** (demo vs local); use **`navigate()`** on page objects and path/constants from **`core/orangehrm_urls.py`** (e.g. regex for `wait_for_url`) for **path-level** navigation and assertions — not hardcoded full URLs. |
+| Usernames and passwords | `Settings` fields: `orangehrm_user`, `orangehrm_password` (from `.env` / env vars; defaults are demo-only) |
+| Employee names, IDs, leave types, and other domain inputs | `data/*.json`, `data/*.csv`, or helpers under `utils/` (e.g. `utils/helpers.py`) |
+| One-off strings repeated across tests | Named constants in a small `tests/constants.py` **or** a single row in `data/` — not scattered literals |
+
+- **`get_settings().base_url`** — use when you need the **root URL** of the SUT and it must track **.env** / CI (host only).
+- **`navigate()`** + **`core/orangehrm_urls.py`** — use for **route/path behavior**: page entry, and regex patterns (e.g. **`DASHBOARD_URL`**) for **`wait_for_url`** so tests stay consistent across hosts.
+
+**Allowed literals** (keep rare and intentional):
+
+- **Pytest markers** and short **assertion messages** (human-readable failure text).
+- **URL glob patterns** passed to `wait_for_url` when they describe routing, not environment hosts (e.g. `**/auth/login**`).
+- **Expected UI substrings** that assert product copy (prefer pulling the canonical string from `data/` if the same assertion is reused).
+
+### Separation of concerns
+
+- **`data/`** — static or shared datasets (JSON, CSV). No Playwright imports, no test classes.
+- **`tests/`** — orchestration only: arrange data references, call page objects, assert outcomes.
+- **`utils/`** — cross-cutting helpers (e.g. truncation, logging, and data builders in **`utils/helpers.py`**). The name **`generate_test_data`** (as in a **`generate_test_data` factory** or **`utils/generate_test_data.py`**) is **illustrative only**—that module is not in the repository; add shared factories under **`utils/helpers.py`** unless you introduce a new module in a dedicated change.
+
+When `data/` is empty for a suite, **add** `data/testdata.json` (or module-specific files) rather than embedding large dicts inside test files.
+
+### Dynamic / synthetic data (parallel safety)
+
+- **Approach (single source):** **Do not add `Faker`.** The project does not list it in **`requirements.txt` / `pyproject.toml`**, and keeps synthetic data in **`utils/helpers.py`** (e.g. `random_string`, `unique_employee_name`, or UUID/timestamp-based builders you add there). For **`pytest-xdist`** (`-n auto`), import those helpers in tests so worker processes do not collide on fixed strings (flaky against real backends). **Rationale:** fewer third-party dependencies, one reviewed place for uniqueness logic, and shared helpers are easier to audit than ad hoc `Faker` usage scattered in tests.
+- **Where to add patterns:** Put new shared builders in **`utils/helpers.py`**, with a short **docstring** (or a module-level note) that mentions **pytest-xdist** and the intended use (names, IDs, free text). Do not embed one-off random/UUID blocks in individual test files when the same pattern will run under **`-n auto`**.
+- If you need locale-heavy or very large fake datasets, open a **dependency / ADR** change to add **`Faker`** to **`requirements.txt` / `pyproject.toml`**, then document usage beside **`utils/helpers.py`**. Until then, **do not** add **`Faker`** for tests.
+- **Do not** check in secrets or production credentials in helpers or data files.
+
+---
+
+## 2. Execution and framework standards
+
+### Centralized fixtures and hooks
+
+- **All** shared fixtures and session hooks live in **`tests/conftest.py`**:
+  - **`pytest_configure`** — report dirs, reset `reports/failures.txt`.
+  - **`pytest_runtest_makereport`** — failure screenshots, append to `failures.txt`.
+  - **`pytest_sessionfinish`** — optional local AI audit (non-CI).
+  - **`browser_context`**, **`page`**, **`page_factory`**, **`logged_in_page_factory`** — per-test isolation.
+
+Do not define duplicate `browser_context` / `page` fixtures in individual test modules unless there is a documented exception (e.g. special scope); prefer extending `conftest.py`.
+
+### Environment configuration
+
+- **`BASE_URL`** maps to **`Settings.base_url`** via Pydantic **`BaseSettings`** (`config/settings.py`, `env_file=".env"`).
+- **Credentials** — **`orangehrm_user`**, **`orangehrm_password`** — same source; never read `os.environ["PASSWORD"]` ad hoc in tests when `get_settings()` / `page_factory.settings` is available.
+- **`page_factory.settings`** (or `get_settings()` in hooks) is the **only** approved way to read run configuration inside tests.
+
+### Atomic design and parallelism
+
+- **One test = one behavior.** No implicit order between tests; no reliance on data left by a previous test.
+- **Function-scoped** browser fixtures (current pattern) give a **clean context per test** — required for **`pytest-xdist`**.
+- **No** global mutable state, shared open files, or static counters across workers.
+- **No** `async` tests or `playwright.async_api` — sync suite only (`playwright-core-sync.mdc`).
+
+### Markers
+
+Register markers in **`pyproject.toml`** `[tool.pytest.ini_options]` and use consistently:
+
+- `smoke` — quick sanity
+- `regression` — broader suite
+- `pim`, `leave` — module tags
+
+---
+
+## 3. Assertions and stability
+
+- **UI state:** `expect(locator)` (web-first).
+- **Non-UI / data:** plain `assert`.
+- **Banned:** `page.wait_for_timeout()` — use `expect` or page-object wait helpers.
+
+---
+
+## 4. Maintenance note
+
+If this rule grows to cover **heavy data-seeding** (DB resets, API setup chains, multi-tenant factories), **split** into:
+
+1. **`test-data.mdc`** — `data/`, `utils/helpers.py` (and **`Faker`** only if later added to dependencies), fixtures that only build payloads.
+2. **`test-execution.mdc`** — `conftest.py`, markers, xdist, CI entrypoints, hooks.
+
+Until then, keep a single **`test-strategy.mdc`** to avoid rule sprawl.

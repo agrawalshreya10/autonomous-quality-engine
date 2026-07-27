@@ -4,7 +4,7 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 
 **System under test (default):** the **public demo** only — base URL `https://opensource-demo.orangehrmlive.com/` (e.g. [demo login](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login)). CI and the default `BASE_URL` in [`config/env.example`](config/env.example) use this host. The suite is **not** aimed at OrangeHRM’s marketing site, customer production tenants, or any live product URL other than that shared demo (or whatever you set in `BASE_URL` for local/Docker instances).
 
-*Product reference:* [OrangeHRM](https://www.orangehrm.com/) (vendor / product information only, not an automation target.)
+*Product reference:* [OrangeHRM](https://www.orangehrm.com/) (for product information only; the vendor site is not a test target).
 
 ## Features
 
@@ -14,6 +14,7 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 - **Reporting**: pytest-html report in `reports/`; screenshots on failure
 - **CI/CD**: GitHub Actions on push/PR; smoke job + full suite; upload reports as artifacts
 - **AI audit**: **Ollama** (local) or **Gemini** (cloud); optional auto-run after local failures; see [AI failure analysis](#ai-failure-analysis)
+- **Docs map**: [`docs/README.md`](docs/README.md) links architecture, decisions, historical plans, and reference notes.
 
 ## Requirements
 
@@ -38,6 +39,19 @@ playwright install chromium
 # Optional: copy env template and adjust
 cp config/env.example .env
 ```
+
+### Cursor MCP (optional)
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers, when you add them in your local config, can provide Playwright browser inspection, HTTP fetch, git operations, and database access to Cursor’s AI assistant. **Do not commit** a real [`.cursor/mcp.json`](.cursor/mcp.json) — it often contains **machine paths** and **secrets** (e.g. database URLs). That file is listed in [`.gitignore`](.gitignore).
+
+**Setup:** copy the example and edit it locally. Cursor reads `.cursor/mcp.json` in this repo; keep your secrets only on your machine.
+
+```bash
+cp .cursor/mcp.json.example .cursor/mcp.json
+# Edit .cursor/mcp.json: set git repo path, MYSQL_URL, or remove servers you do not use.
+```
+
+The committed **[`.cursor/mcp.json.example`](.cursor/mcp.json.example)** shows the same *shape* as a typical config (Playwright MCP, optional fetch, git, optional MySQL). Replace placeholders; use `npx` for `command` where possible so paths match other developers. Remove any server block you do not need.
 
 ## Running tests
 
@@ -124,8 +138,11 @@ python3 -m venv .venv
 Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell). CI uses the same variables in the AI Failure Analysis workflow.
 
 ```bash
+# --model optional: omit to use DEFAULT_GEMINI_MODEL in ai_audit/gemini_client.py (gemini-3.1-flash-lite-preview)
 AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3.1-flash-lite-preview --artifacts-dir reports
 ```
+
+`gemini-1.5-*` model IDs are **not** supported here (decommissioned); use `gemini-3.1-flash-lite-preview` (default) or `gemini-3.1-flash-preview` as an explicit override. See **`.cursor/rules/ai-audit-governance.mdc`** for the canonical policy.
 
 Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `./scripts/run_failure_analyzer.sh --help`).
 
@@ -133,6 +150,7 @@ Optional one-shot override without changing `.env`: `--client gemini` or `--clie
 
 ```
 autonomous-quality-engine/
+├── .cursor/mcp.json.example                    # Commit: sample MCP config (copy to .cursor/mcp.json)
 ├── .github/workflows/test.yml                 # CI: smoke + full test (Test Suite)
 ├── .github/workflows/ai-failure-analysis.yml  # Optional Gemini analysis after Test Suite failure
 ├── scripts/run_failure_analyzer.sh            # Run analyzer with .venv (avoids macOS python3 alias issues)
@@ -160,10 +178,10 @@ Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHR
 
 ## Contributing and pull requests
 
-- **Standards:** Follow **`.cursorrules`** (POM, locators, `expect`, logging). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); project snapshot: [docs/PROJECTSTATUS.md](docs/PROJECTSTATUS.md); notable changes: [CHANGELOG.md](CHANGELOG.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
-- **CodeRabbit:** When [CodeRabbit](https://coderabbit.ai) is connected to the repository, use it to catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursorrules`** and the decision docs remain authoritative for merges.
+- **Standards:** Follow **`.cursor/rules/*.mdc`** (POM, locators, `expect`, logging; see `playwright-core-sync.mdc` and `page-object-standards.mdc`). Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); project snapshot: [docs/PROJECTSTATUS.md](docs/PROJECTSTATUS.md); notable changes: [CHANGELOG.md](CHANGELOG.md); locator/logging decisions: [docs/decisions/playwright-locators-and-logging.md](docs/decisions/playwright-locators-and-logging.md).
+- **CodeRabbit:** [CodeRabbit](https://coderabbit.ai) is configured for the GitHub repository and can catch drift from those rules (e.g. missing `element_label`, raw `page` clicks on critical paths). Treat its output as advisory; **`.cursor/rules/`** and the decision docs remain authoritative for merges.
 - **PR template:** Opening a PR loads [`.github/pull_request_template.md`](.github/pull_request_template.md) — complete the checklist and confirm tests were run.
 
 ## License
 
-This repository is released under the [MIT License](LICENSE). Use as needed for learning and portfolio. OrangeHRM is a trademark of OrangeHRM Inc.
+This repository is released under the [MIT License](LICENSE). Original portfolio project by Shreya Agrawal. OrangeHRM is a trademark of OrangeHRM Inc.

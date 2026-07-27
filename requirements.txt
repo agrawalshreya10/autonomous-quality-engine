@@ -10,7 +10,7 @@ pydantic-settings>=2.1.0
 python-dotenv>=1.0.0
 
 # AI audit (failure_analyzer): hybrid Ollama (local) + Gemini (cloud)
-# google-genai — official Gemini API client (.cursor/rules/gemini-sdk-migration.mdc); not google-generativeai
+# google-genai — official Gemini API client (.cursor/rules/ai-audit-governance.mdc); not google-generativeai
 requests>=2.31.0
 google-genai==1.73.1
 

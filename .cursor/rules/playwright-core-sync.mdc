@@ -1,0 +1,75 @@
+---
+description: Core environment, execution, and sync-only enforcement for the Playwright Python test suite
+alwaysApply: true
+---
+
+# Playwright Core — Sync-Only Enforcement
+
+## Environment
+
+- **Runtime:** Python 3.12+. Always execute via `.venv/bin/pytest` or `.venv/bin/python` — never a bare `python3` or system alias.
+- **Test runner:** `pytest` with `pytest-playwright`. Entry point: `.venv/bin/pytest`.
+- **Browser install:** `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chromium`.
+
+## Sync-Only API — MANDATORY
+
+This project uses **`playwright.sync_api` exclusively**.
+
+```python
+# ✅ CORRECT
+from playwright.sync_api import Page, expect, sync_playwright
+
+def go(self) -> None:
+    self._page.goto(self._settings.base_url)
+```
+
+```python
+# ❌ BANNED — do not generate any of the following
+from playwright.async_api import async_playwright   # wrong module
+import asyncio                                       # not used here
+
+async def go(self):                                 # async page methods banned
+    await self._page.goto(...)                      # await on Playwright calls banned
+```
+
+`async def`, `await`, `asyncio.run()`, and `playwright.async_api` imports are **architecturally incompatible** with the sync session lifecycle and must never appear in `pages/`, `core/`, or `tests/`.
+
+## Locator API — Framework Identity
+
+Use **Playwright Python** locator methods only. Selenium patterns are banned.
+
+```python
+# ✅ Playwright Python
+self._page.get_by_role("button", name="Login")
+self._page.get_by_label("Username")
+self._page.get_by_test_id("submit-btn")
+self._page.get_by_placeholder("Username")
+self._page.locator(".oxd-alert-content-text")
+
+# ❌ Selenium / wrong-framework hallucinations — BANNED
+driver.find_element(By.XPATH, "//div")   # Selenium — not Playwright
+page.get_by_xpath("//div")               # does not exist in Playwright Python
+page.querySelector(".foo")               # JS API — not Python
+```
+
+## Assertions & Timing
+
+- Use `expect(locator)` for **all UI state checks** (web-first, auto-waiting).
+- `assert` is for non-UI logic only (API responses, data comparisons).
+- **`page.wait_for_timeout()` is banned.** Use `expect(...).to_be_visible()` or condition-based waits.
+
+## Execution
+
+- `BASE_URL` must come from `config/settings.py` (env-driven). Never hardcode URLs in tests.
+- Tests must be parallel-safe (`pytest-xdist`). No shared mutable state between test functions.
+
+## AI-Driven Debugging
+
+On any test failure:
+1. Run `scripts/run_failure_analyzer.sh` for local Ollama analysis.
+2. Check `reports/failures.txt` and Playwright traces under `reports/`.
+3. Refer to `docs/PROJECTSTATUS.md` (current scope) · `docs/ARCHITECTURE.md` (design) · `CHANGELOG.md` (recent changes).
+
+## DOM verification (Cursor)
+
+When validating DOM structure or selector behavior, prefer **Playwright MCP** from `.cursor/mcp.json` when the session provides it. Combine with **traces** and **failing tests** — do not guess locator semantics without evidence.
