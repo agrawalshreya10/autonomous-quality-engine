@@ -1,6 +1,6 @@
 # Autonomous Quality Engine — project status
 
-**Last updated:** 2026-04-27 — Roadmap phased (P1 Docker, P2 Faker data, **P3 CI/CD + Allure reporting**); see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
+**Last updated:** 2026-07-27 — Strategy: **Python = API-first**; UI E2E expansion moves to a **separate TypeScript Playwright** project; freeze growing Python UI coverage (keep thin smoke). Phase 1 Docker for current smoke (local-first). See [ARCHITECTURE.md](ARCHITECTURE.md#strategy-direction-api-first) and [decisions/python-api-vs-typescript-ui.md](decisions/python-api-vs-typescript-ui.md). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
 
 This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly. **Chronological notable changes** are recorded in [CHANGELOG.md](../CHANGELOG.md) at the repository root.
 
@@ -40,7 +40,9 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 7. **Reports** — `reports/report.html`, `reports/screenshots/` (on failure), `reports/failures.txt` (for AI audit). After a **local** failed run with Ollama up, `reports/ai_suggestions.md` holds model output (same path when using `--out` manually).
 
-8. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: **`./scripts/run_failure_analyzer.sh`** (uses `.venv`; avoids macOS `python3` → Homebrew alias issues) or `.venv/bin/python -m ai_audit.failure_analyzer …`. Gemini (requires `GEMINI_API_KEY`): add `--client gemini --model gemini-3.1-flash-lite-preview` (or omit `--model` to use the default). CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)). Reference docs for the SDK + API surface: [reference/gemini-genai-sdk-docs.md](reference/gemini-genai-sdk-docs.md).
+8. **Docker (Phase 1 smoke)** — Build and run the smoke suite in a container (no host `.venv` required). Pass `BASE_URL` / credentials as env — never bake them into the image. See root [README.md](../README.md#docker-local-smoke) for `docker build` / `docker run` examples.
+
+9. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: **`./scripts/run_failure_analyzer.sh`** (uses `.venv`; avoids macOS `python3` → Homebrew alias issues) or `.venv/bin/python -m ai_audit.failure_analyzer …`. Gemini (requires `GEMINI_API_KEY`): add `--client gemini --model gemini-3.1-flash-lite-preview` (or omit `--model` to use the default). CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)). Reference docs for the SDK + API surface: [reference/gemini-genai-sdk-docs.md](reference/gemini-genai-sdk-docs.md).
 
 ---
 
@@ -49,12 +51,18 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 - First-party Python is on the order of **~900+ lines** across `core/`, `config/`, `pages/`, `tests/`, `utils/`, and `ai_audit/` (excluding virtualenvs).
 - The project is a **small vertical slice**, not a stub: driver, POM, fixtures, CI, and AI failure analysis are wired end-to-end.
 
+## Strategy (API-first)
+
+- **Python (this repo):** API payloads/clients next; keep **thin UI smoke** only — do not expand page objects or UI regression depth.
+- **TypeScript Playwright (separate project):** Owns broader UI E2E when that repo exists.
+- **Decision:** [decisions/python-api-vs-typescript-ui.md](decisions/python-api-vs-typescript-ui.md).
+
 ## Roadmap phases (see [ARCHITECTURE.md](ARCHITECTURE.md#roadmap--gaps-ref-projectstatusmd))
 
 | Phase | Focus |
 |-------|--------|
-| **1** | **Infrastructure** — Dockerization for CI/local parity; service containers as needed. |
-| **2** | **Data** — Move from static JSON to **Faker** (or similar) for runtime test data. |
+| **1** | **Infrastructure** — Dockerize **current** `pytest -m smoke` for local/CI parity (`Dockerfile`; CI image wiring is follow-up). |
+| **2** | **API-first** — Clients and runtime payloads (e.g. Faker); not Python UI expansion. |
 | **3** | **CI/CD & reporting** — Pipeline hardening plus **Allure** (`allure-pytest`) alongside **pytest-html**; dependency remains commented in `requirements.txt` until this phase. |
 
 ---
@@ -78,7 +86,7 @@ There are no `TODO` / `FIXME` markers in first-party project code under `core/`,
 
 ## Gaps and incomplete areas
 
-1. **Coverage vs. README** — Only a subset of OrangeHRM flows is covered. Other modules (admin, recruitment, time, performance, etc.) are not implemented.
+1. **Coverage vs. README** — Only a subset of OrangeHRM flows is covered. **By design (2026-07-27):** do not expand Python UI coverage; deeper UI E2E moves to a separate TypeScript Playwright project. Python growth is API-first (Phase 2).
 
 2. **`utils/` integration** — **Resolved:** `truncate_for_log`, interaction loggers, and `BasePage` are wired; all page objects route critical actions through `self.click` / `self.fill` with descriptive `element_label` values.
 

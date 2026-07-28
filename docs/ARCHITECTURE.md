@@ -42,24 +42,29 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 - **CLI**: `python -m ai_audit.failure_analyzer --client gemini --artifacts-dir reports` (or `--client ollama`).
 - **CI**: Separate **AI Failure Analysis** workflow ([ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml)) triggered by `workflow_run` when Test Suite fails; **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT, `actions:read`) for cross-run artifact download and optional **`GEMINI_API_KEY`** for cloud analysis. For triggers, token limits, and `workflow_run`, see [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) ([official doc](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)).
 
+## Strategy direction (API-first)
+
+**This Python repo is API-first going forward.** New coverage should emphasize API payloads, clients, and contract-oriented checks. **UI E2E expansion** (deeper OrangeHRM flows, richer page objects) belongs in a **separate TypeScript Playwright** project. Until that TS suite exists, keep the **thin Python UI smoke** (current `-m smoke`) for sanity and Docker/CI parity — do not grow Python UI page objects or UI regression depth. Decision record: [docs/decisions/python-api-vs-typescript-ui.md](decisions/python-api-vs-typescript-ui.md).
+
 ## Roadmap & Gaps (Ref: PROJECTSTATUS.md)
 
 Development is grouped into **phases**; items below stay numbered for easy reference.
 
-### Phase 1 — Infrastructure
-1. **Dockerization**: Containerize the execution for GitHub Actions compatibility. For attaching services (DB, cache) in GitHub Actions jobs, see [reference/github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) (summary of [official docs](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers)).
+### Phase 1 — Infrastructure (Docker / CI–local parity)
+1. **Dockerization**: Containerize the **current** pytest smoke runner for local-first parity with CI (image builds deps + Chromium; `BASE_URL` / credentials stay env-injected). Existing smoke remains valid for this phase. Wire the image into GitHub Actions as a follow-up once local `docker build` / `docker run` is proven. For attaching services (DB, cache) in Actions jobs, see [reference/github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) (summary of [official docs](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers)).
 
-### Phase 2 — Data
-2. **Dynamic Data**: Transition from static JSON to runtime data generation using Faker.
+### Phase 2 — API-first data & clients
+2. **API payloads / clients**: Move toward OrangeHRM REST (and related) clients and runtime payload generation (e.g. Faker), aligned with the API-first direction above. Static JSON fixtures give way to generated, contract-aware data. UI expansion does **not** land here — it moves to the TypeScript Playwright project.
 
 ### Phase 3 — CI/CD & reporting
-3. **CI/CD**: Harden YAML-based pipelines for automated regression. Event triggers and filters: [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) (summary of [Triggering a workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)). CI patterns for Python: [reference/github-actions-build-test-python.md](reference/github-actions-build-test-python.md).
+3. **CI/CD**: Harden YAML-based pipelines for automated regression (including eventual Docker-based smoke). Event triggers and filters: [reference/github-actions-trigger-workflow.md](reference/github-actions-trigger-workflow.md) (summary of [Triggering a workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)). CI patterns for Python: [reference/github-actions-build-test-python.md](reference/github-actions-build-test-python.md).
 4. **Allure reporting**: Integrate **Allure** alongside (not necessarily replacing) **pytest-html**. Enable `allure-pytest` in `requirements.txt` (currently commented), configure pytest to write `allure-results/`, add CI steps to run the **Allure CLI** (or an Actions wrapper) to produce `allure-report/` and optionally upload as an artifact; keep `.gitignore` entries for `allure-results/` and `allure-report/`. Rationale: structured steps, attachments, and richer dashboards for portfolio and team review — see discussion in project docs vs. single-file HTML reports.
 
 ### Later / cross-cutting
 5. **Project Completion**: Refinement of README.md and documentation for portfolio presentation.
 6. **CodeRabbit Integration** *(configured)*: AI-powered PR reviews on GitHub, aligned with **`.cursor/rules/*.mdc`** standards (mandatory `element_label`, `self.click`/`self.fill` usage, `.or_()` on critical locators).
 7. **Gemini AI Audit in CI** *(completed)*: `GeminiClient` and `failure_analyzer` are implemented; workflows now match **B + D** (separate on-demand analysis workflow + redacted single surface) per [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md). See [ai-failure-analysis.yml](.github/workflows/ai-failure-analysis.yml).
+8. **TypeScript Playwright UI suite** *(separate repo)*: Broader UI E2E once that project exists; Python keeps thin smoke only until then.
 
 ## GitHub documentation (reference summaries)
 

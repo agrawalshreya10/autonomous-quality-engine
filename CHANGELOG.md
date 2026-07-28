@@ -8,8 +8,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Added
+
+- **Docker (Phase 1)** — Root `Dockerfile` and `.dockerignore` for local-first `pytest -m smoke` (Python 3.12 + Playwright Chromium). `BASE_URL` / credentials remain env-injected. CI image wiring is a follow-up.
+- **ADR** — [`docs/decisions/python-api-vs-typescript-ui.md`](docs/decisions/python-api-vs-typescript-ui.md): Python repo is **API-first**; UI E2E expansion moves to a separate TypeScript Playwright project; freeze growing Python UI coverage (keep thin smoke).
+
 ### Changed
 
+- **Roadmap / strategy** — `docs/ARCHITECTURE.md` and `docs/PROJECTSTATUS.md` updated: Phase 1 Docker for current smoke; Phase 2 toward API payloads/clients; UI expansion noted as TS Playwright (separate). Docs index links the new ADR.
 - **Cursor** — Removed root **`.cursorrules`**; project standards are defined in **`.cursor/rules/*.mdc`**. Removed the obsolete **`.cursor/ai-contract/`** folder (local learning notes can live under **`.cursor/user-docs/`**, gitignored).
 - **Documentation** — Added `docs/README.md` as the docs index, removed completed one-off plan files (`docs/plans/plan-dependency-determinism.md`, `docs/plans/plan-cursorrules-split.md`) after the migrations they described, and kept the `google-genai` maintenance note in the docs index and **`.cursor/rules/ai-audit-governance.mdc`** instead of duplicate plans. Standards are enforced in **`.cursor/rules/*.mdc`**.
 

@@ -14,6 +14,7 @@ Use this page as the quick map for project docs. The root `README.md` explains h
 
 ## Core Decisions
 
+- [`decisions/python-api-vs-typescript-ui.md`](decisions/python-api-vs-typescript-ui.md) — Python stays **API-first**; UI E2E expansion moves to a separate TypeScript Playwright project; keep thin Python UI smoke only.
 - [`decisions/playwright-locators-and-logging.md`](decisions/playwright-locators-and-logging.md) explains the reasoning behind locator strictness, `.or_()` usage, lazy locators, and past-tense interaction logs.
 - [`decisions/ci-ai-failure-analysis.md`](decisions/ci-ai-failure-analysis.md) records the CI AI failure-analysis strategy: on-demand analysis plus a minimal redacted publication surface.
 
