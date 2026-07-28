@@ -1,0 +1,48 @@
+# Venvs and local Playwright browser caches
+.venv/
+venv/
+ENV/
+.playwright-browsers/
+.playwright/
+
+# Git / CI / editor (not needed in the image)
+.git/
+.github/
+.cursor/
+.gitignore
+.gitattributes
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+
+# Reports and test artifacts
+reports/
+allure-results/
+allure-report/
+test-results/
+playwright-report/
+*.trace
+*.zip
+
+# Python junk
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docs are optional in the runner image (keep Dockerfile context small)
+docs/
+*.md
