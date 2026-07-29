@@ -61,17 +61,17 @@ class TestOllamaHealthUrl:
 class TestGeminiAllowlist:
     def test_default_and_override_allowed(self) -> None:
         assert validate_gemini_model(DEFAULT_GEMINI_MODEL) == DEFAULT_GEMINI_MODEL
-        assert validate_gemini_model("gemini-3.1-flash-preview") == (
-            "gemini-3.1-flash-preview"
-        )
+        assert validate_gemini_model("gemini-3.5-flash") == "gemini-3.5-flash"
         assert ALLOWED_GEMINI_MODELS == {
-            "gemini-3.1-flash-lite-preview",
-            "gemini-3.1-flash-preview",
+            "gemini-3.1-flash-lite",
+            "gemini-3.5-flash",
         }
 
     def test_decommissioned_rejected(self) -> None:
         with pytest.raises(ValueError, match="Unsupported Gemini model"):
             validate_gemini_model("gemini-1.5-flash")
+        with pytest.raises(ValueError, match="Unsupported Gemini model"):
+            validate_gemini_model("gemini-3.1-flash-lite-preview")
         with pytest.raises(ValueError, match="Unsupported Gemini model"):
             fa._resolve_model("gemini", "gemini-1.5-pro")
         with pytest.raises(ValueError, match="Unsupported Gemini model"):

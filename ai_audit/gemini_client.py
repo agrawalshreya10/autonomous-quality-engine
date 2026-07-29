@@ -18,13 +18,14 @@ from ai_audit.fix_suggestion import (
 
 logger = logging.getLogger("ai_audit.gemini")
 
-# Allowed family: gemini-3.1-flash-preview | gemini-3.1-flash-lite-preview
+# Allowed family: gemini-3.1-flash-lite (GA default) | gemini-3.5-flash (GA override)
+# gemini-3.1-flash-lite-preview was shut down 2026-05-25 (see Gemini API deprecations).
 # (canonical rule: .cursor/rules/ai-audit-governance.mdc)
-DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
+DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite"
 ALLOWED_GEMINI_MODELS = frozenset(
     {
-        "gemini-3.1-flash-lite-preview",
-        "gemini-3.1-flash-preview",
+        "gemini-3.1-flash-lite",
+        "gemini-3.5-flash",
     }
 )
 
