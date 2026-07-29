@@ -130,6 +130,8 @@ Always run **`.venv/bin/pytest`** (or activate the venv and still use the prefix
 
 Provider selection is explicit via **`AI_PROVIDER`** in `.env` (`ollama` or `gemini`; default **`ollama`** if unset). Copy [`config/env.example`](config/env.example) and set `GEMINI_API_KEY` when using Gemini.
 
+Both providers return the same structured contract (`FixSuggestion` JSON → markdown Category / Root Cause / Fix / Confidence). Invalid JSON or banned Selenium/async patterns in the suggested fix fall back to deterministic **`HEURISTIC_FALLBACK`** (see `ai_audit/fix_suggestion.py` and **`.cursor/rules/ai-audit-governance.mdc`**).
+
 **Use the project venv for every CLI invocation.** On macOS, `python3` is often **aliased to Homebrew** (ignores `.venv`), which causes `ModuleNotFoundError: dotenv` and other missing packages. Prefer one of these — they always use **`.venv/bin/python`**:
 
 ```bash
