@@ -21,6 +21,22 @@ logger = logging.getLogger("ai_audit.gemini")
 # Allowed family: gemini-3.1-flash-preview | gemini-3.1-flash-lite-preview
 # (canonical rule: .cursor/rules/ai-audit-governance.mdc)
 DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
+ALLOWED_GEMINI_MODELS = frozenset(
+    {
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3.1-flash-preview",
+    }
+)
+
+
+def validate_gemini_model(model: str) -> str:
+    """Fail fast on decommissioned / unsupported Gemini model IDs."""
+    if model not in ALLOWED_GEMINI_MODELS:
+        allowed = ", ".join(sorted(ALLOWED_GEMINI_MODELS))
+        raise ValueError(
+            f"Unsupported Gemini model: {model!r}. Allowed: {allowed}"
+        )
+    return model
 
 
 class GeminiClient(LLMClient):
@@ -33,7 +49,7 @@ class GeminiClient(LLMClient):
         timeout_sec: int = 120,
     ) -> None:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
-        self.model = model
+        self.model = validate_gemini_model(model)
         self.timeout_sec = timeout_sec
 
     def suggest_fix(

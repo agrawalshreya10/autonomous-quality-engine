@@ -15,11 +15,16 @@ import re
 import socket
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
 from ai_audit.client import LLMClient
-from ai_audit.gemini_client import DEFAULT_GEMINI_MODEL, GeminiClient
+from ai_audit.gemini_client import (
+    DEFAULT_GEMINI_MODEL,
+    GeminiClient,
+    validate_gemini_model,
+)
 from ai_audit.ollama_client import DEFAULT_OLLAMA_MODEL, OllamaClient
 
 logger = logging.getLogger("ai_audit")
@@ -80,15 +85,22 @@ def _trim_failure_message(message: str, max_chars: int = 2000) -> str:
     return result if result.strip() else message[:max_chars]
 
 
+def _ollama_host_port() -> tuple[str, int]:
+    """Parse host/port from ``OLLAMA_BASE_URL`` (default ``http://127.0.0.1:11434``)."""
+    raw = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434").strip()
+    parsed = urlparse(raw if "://" in raw else f"http://{raw}")
+    host = parsed.hostname or "127.0.0.1"
+    port = parsed.port or 11434
+    return host, port
+
+
 def _check_ollama_health() -> bool:
-    """Check if Ollama is running on default port 11434."""
+    """Check if Ollama is reachable at ``OLLAMA_BASE_URL`` (default ``127.0.0.1:11434``)."""
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(2)
-        result = sock.connect_ex(('localhost', 11434))
-        sock.close()
-        return result == 0
-    except Exception:
+        host, port = _ollama_host_port()
+        with socket.create_connection((host, port), timeout=2):
+            return True
+    except OSError:
         return False
 
 
@@ -156,9 +168,12 @@ def _effective_provider(cli_client: str) -> str:
 
 
 def _resolve_model(provider: str, model: str | None) -> str:
-    if model:
-        return model
-    return DEFAULT_GEMINI_MODEL if provider == "gemini" else DEFAULT_OLLAMA_MODEL
+    resolved = model or (
+        DEFAULT_GEMINI_MODEL if provider == "gemini" else DEFAULT_OLLAMA_MODEL
+    )
+    if provider == "gemini":
+        return validate_gemini_model(resolved)
+    return resolved
 
 
 def get_client(provider: str, model: str | None) -> LLMClient | None:
@@ -172,7 +187,12 @@ def get_client(provider: str, model: str | None) -> LLMClient | None:
         return GeminiClient(model=resolved_model)
     if provider == "ollama":
         if not _check_ollama_health():
-            print("[AI-AUDIT] Local Ollama not detected. Skipping auto-analysis. To enable, run 'ollama serve'.")
+            print(
+                "[AI-AUDIT] Local Ollama not detected at "
+                f"{os.environ.get('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')}. "
+                "Skipping auto-analysis. To enable, run 'ollama serve' "
+                "(or set OLLAMA_BASE_URL to a reachable host)."
+            )
             return None
         return OllamaClient(model=resolved_model)
     raise ValueError(f"Unknown provider: {provider!r}")
@@ -194,7 +214,8 @@ def main() -> int:
         default=None,
         help=(
             f"Optional model override (Ollama default: {DEFAULT_OLLAMA_MODEL}, "
-            f"Gemini default: {DEFAULT_GEMINI_MODEL})"
+            f"Gemini default: {DEFAULT_GEMINI_MODEL}; "
+            "Gemini allowlist: gemini-3.1-flash-lite-preview, gemini-3.1-flash-preview)"
         ),
     )
     parser.add_argument("--out", type=Path, help="Write suggestions to file")
@@ -206,8 +227,14 @@ def main() -> int:
         print(str(e), file=sys.stderr)
         return 1
 
-    if args.failures and args.failures.exists():
-        failures = [(n, _trim_failure_message(m), None) for n, m in _parse_failures_file(args.failures)]
+    if args.failures is not None:
+        if not args.failures.exists():
+            print(f"Failures file not found: {args.failures}", file=sys.stderr)
+            return 1
+        failures = [
+            (n, _trim_failure_message(m), None)
+            for n, m in _parse_failures_file(args.failures)
+        ]
     else:
         failures = _read_failures_from_artifacts(args.artifacts_dir)
 
@@ -217,7 +244,7 @@ def main() -> int:
 
     try:
         client = get_client(effective_provider, args.model)
-    except RuntimeError as e:
+    except (RuntimeError, ValueError) as e:
         print(str(e), file=sys.stderr)
         return 1
     if client is None:
