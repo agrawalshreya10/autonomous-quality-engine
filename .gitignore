@@ -32,6 +32,7 @@ ENV/
 
 # Reports and artifacts
 reports/
+artifacts/
 allure-results/
 allure-report/
 test-results/

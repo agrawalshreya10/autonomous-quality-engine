@@ -28,5 +28,6 @@ markers = [
     "regression: full regression suite",
     "pim: PIM module tests",
     "leave: Leave module tests",
+    "unit: fast unit tests (no browser / no live LLM)",
 ]
 filterwarnings = ["ignore::DeprecationWarning"]
