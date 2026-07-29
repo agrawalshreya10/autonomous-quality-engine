@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+## [2026-07-29]
+
 ### Added
 
 - **Docker (Phase 1)** — Root `Dockerfile` and `.dockerignore` for local-first `pytest -m smoke` (Python 3.12 + Playwright Chromium). `BASE_URL` / credentials remain env-injected. CI image wiring is a follow-up.
