@@ -1,6 +1,6 @@
 # Autonomous Quality Engine — project status
 
-**Last updated:** 2026-07-27 — Strategy: **Python = API-first**; UI E2E expansion moves to a **separate TypeScript Playwright** project; freeze growing Python UI coverage (keep thin smoke). Phase 1 Docker for current smoke (local-first). See [ARCHITECTURE.md](ARCHITECTURE.md#strategy-direction-api-first) and [decisions/python-api-vs-typescript-ui.md](decisions/python-api-vs-typescript-ui.md). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
+**Last updated:** 2026-07-29 — Strategy: **Python = API-first**; UI E2E expansion moves to a **separate TypeScript Playwright** project; freeze growing Python UI coverage (keep thin smoke). Phase 1 Docker for current smoke (local-first). See [ARCHITECTURE.md](ARCHITECTURE.md#strategy-direction-api-first) and [decisions/python-api-vs-typescript-ui.md](decisions/python-api-vs-typescript-ui.md). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
 
 This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly. **Chronological notable changes** are recorded in [CHANGELOG.md](../CHANGELOG.md) at the repository root.
 
