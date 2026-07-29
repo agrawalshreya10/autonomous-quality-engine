@@ -8,6 +8,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Fixed
+
+- **Docker non-root runtime** — Smoke image runs as unprivileged user `aqe` (ownership of `/app`, read/exec on `/ms-playwright`) so pytest and Chromium are not root ([#23](https://github.com/agrawalshreya10/autonomous-quality-engine/issues/23)).
+- **Docker smoke env** — README uses smoke-only `.env.smoke` / `config/env.smoke.example` instead of general `.env`, so AI keys are not injected into the container ([#24](https://github.com/agrawalshreya10/autonomous-quality-engine/issues/24)).
+
 ## [2026-07-29]
 
 ### Added

@@ -19,15 +19,21 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && playwright install --with-deps chromium
 
-COPY . .
+# Unprivileged runtime user (CWE-250): pytest + Chromium must not run as root
+RUN useradd --create-home --shell /usr/sbin/nologin aqe
+COPY --chown=aqe:aqe . .
 
-# pytest-html / screenshots expect this tree
-RUN mkdir -p reports/screenshots
+# pytest-html / screenshots expect this tree; aqe needs /app write + browser read/exec
+RUN mkdir -p reports/screenshots \
+    && chown -R aqe:aqe /app \
+    && chmod -R a+rX /ms-playwright
 
 # Defaults match public demo when unset (config/settings.py); override via `docker run -e`
 # Do not set ORANGEHRM_PASSWORD here.
 ENV BROWSER=chromium \
     HEADLESS=true
+
+USER aqe
 
 # Override args as needed, e.g. docker run ... aqe-smoke pytest -m smoke -n auto
 CMD ["pytest", "-m", "smoke", "-v", "--tb=short", \
