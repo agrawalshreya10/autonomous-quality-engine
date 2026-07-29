@@ -71,7 +71,8 @@ _BANNED_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bquerySelector\b"), "querySelector"),
     (re.compile(r"\bplaywright\.async_api\b"), "playwright.async_api"),
     (re.compile(r"\basync\s+def\b"), "async def"),
-    (re.compile(r"\bawait\s+\w"), "await"),
+    # Keyword boundary only — also catches await(...) without intervening whitespace.
+    (re.compile(r"\bawait\b"), "await"),
 )
 
 _ROOT_CAUSE_MAX_CHARS = 800

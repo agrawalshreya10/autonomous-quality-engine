@@ -134,6 +134,17 @@ class TestBannedPatterns:
         assert "*HEURISTIC_FALLBACK*" in out
         assert "banned pattern: await" in out
 
+    def test_await_call_syntax_rejected(self) -> None:
+        """await(...) has no whitespace after the keyword; still banned."""
+        assert find_banned_patterns("await(page.goto(url))") == ["await"]
+        out = validate_or_fallback(
+            _valid_json(fix_markdown="result = await(self._page.goto(url))"),
+            "timeout",
+            provider="gemini",
+        )
+        assert "*HEURISTIC_FALLBACK*" in out
+        assert "banned pattern: await" in out
+
     def test_get_by_xpath_rejected(self) -> None:
         out = validate_or_fallback(
             _valid_json(fix_markdown="page.get_by_xpath('//div')"),
