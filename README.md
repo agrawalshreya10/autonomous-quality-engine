@@ -15,6 +15,8 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 - **CI/CD**: GitHub Actions on push/PR; smoke job + full suite; upload reports as artifacts
 - **AI audit**: **Ollama** (local) or **Gemini** (cloud); optional auto-run after local failures; see [AI failure analysis](#ai-failure-analysis)
 - **Docs map**: [`docs/README.md`](docs/README.md) links architecture, decisions, historical plans, and reference notes.
+- **Direction**: Python is **API-first**; keep thin UI smoke here. Broader UI E2E expands in a separate TypeScript Playwright project ([decision](docs/decisions/python-api-vs-typescript-ui.md)).
+- **Docker**: Local-first smoke image — see [Docker (local smoke)](#docker-local-smoke).
 
 ## Requirements
 
@@ -47,6 +49,33 @@ cp config/env.example .env
 ```
 
 Optional: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`) if you prefer shorter commands in an interactive shell; the **Running tests** section still uses `.venv/bin/pytest` so behavior matches CI and project rules without relying on activation.
+
+## Docker (local smoke)
+
+Phase 1 containerizes the **current** `pytest -m smoke` suite for local/CI parity. Pass `BASE_URL` and credentials as **environment variables** (or `--env-file`); do not hardcode them in the image.
+
+```bash
+# Build (from repository root)
+docker build -t aqe-smoke .
+
+# Run against the public demo (defaults in config if BASE_URL unset)
+docker run --rm \
+  -e HEADLESS=true \
+  -e BASE_URL=https://opensource-demo.orangehrmlive.com \
+  -e ORANGEHRM_USER=Admin \
+  -e ORANGEHRM_PASSWORD=admin123 \
+  aqe-smoke
+
+# Or load vars from a local env file (never commit real secrets)
+docker run --rm --env-file .env aqe-smoke
+
+# Copy reports out of a named container if you need artifacts on the host
+docker run --name aqe-smoke-run --env-file .env aqe-smoke
+docker cp aqe-smoke-run:/app/reports ./reports-from-docker
+docker rm aqe-smoke-run
+```
+
+Strategy note: this Python repo is **API-first** going forward; UI E2E expansion moves to a separate TypeScript Playwright project. Docker here targets the thin smoke gate only — see [docs/decisions/python-api-vs-typescript-ui.md](docs/decisions/python-api-vs-typescript-ui.md).
 
 ### Cursor MCP (optional)
 
@@ -162,6 +191,8 @@ Optional one-shot override without changing `.env`: `--client gemini` or `--clie
 
 ```
 autonomous-quality-engine/
+├── Dockerfile                                  # Phase 1: smoke runner (Python 3.12 + Chromium)
+├── .dockerignore
 ├── .cursor/mcp.json.example                    # Commit: sample MCP config (copy to .cursor/mcp.json)
 ├── .github/workflows/test.yml                 # CI: smoke + full test (Test Suite)
 ├── .github/workflows/ai-failure-analysis.yml  # Optional Gemini analysis after Test Suite failure
