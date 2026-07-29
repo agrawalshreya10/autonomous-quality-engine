@@ -8,6 +8,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Fixed
+
+- **AI audit (#9)** — Ollama TCP health check honors `OLLAMA_BASE_URL` (host/port) instead of hardcoding `localhost:11434`.
+- **AI audit (#10)** — Gemini model allowlist (`ALLOWED_GEMINI_MODELS`) fail-fast rejects decommissioned IDs (e.g. `gemini-1.5-*`) at resolve / client construction.
+- **AI audit (#16)** — Explicit `--failures` path that does not exist exits with an error instead of silently falling back to `--artifacts-dir`.
+
 ## [2026-07-29]
 
 ### Added
