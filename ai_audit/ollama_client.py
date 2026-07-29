@@ -9,21 +9,16 @@ import os
 import requests
 
 from ai_audit.client import LLMClient
-from ai_audit.fix_suggestion import ollama_format_schema, validate_or_fallback
+from ai_audit.fix_suggestion import (
+    build_analysis_prompt,
+    fix_suggestion_json_schema,
+    validate_or_fallback,
+)
 
 logger = logging.getLogger("ai_audit.ollama")
 
 # Default when OLLAMA_MODEL is unset and no constructor `model` is passed (keep in sync with failure_analyzer CLI).
 DEFAULT_OLLAMA_MODEL = "llama3"
-
-# Short, stable preamble — fold project rules once (ai-audit-governance.mdc §2 Instruction folding).
-_SYSTEM_PREAMBLE = (
-    "You are a Quality Architect for this Playwright Python suite. "
-    "Output Playwright sync_api only; no Selenium; no async. "
-    "Prefer BasePage get_resilient_* helpers; do not use parent–child .or_() unions. "
-    "Respond with JSON only matching the schema fields: "
-    "category (Locator|Timing|Data|Environment), root_cause, fix_markdown, confidence (0-1)."
-)
 
 
 class OllamaClient(LLMClient):
@@ -46,7 +41,7 @@ class OllamaClient(LLMClient):
         log_snippet: str = "",
         screenshot_path: str | None = None,
     ) -> str:
-        prompt = self._build_prompt(
+        prompt = build_analysis_prompt(
             test_name=test_name,
             failure_message=failure_message,
             log_snippet=log_snippet,
@@ -55,33 +50,12 @@ class OllamaClient(LLMClient):
         ok, text = self._generate(prompt, test_name=test_name)
         if not ok:
             return text
-        return validate_or_fallback(text, failure_message, test_name=test_name)
-
-    def _build_prompt(
-        self,
-        test_name: str,
-        failure_message: str,
-        log_snippet: str = "",
-        screenshot_path: str | None = None,
-    ) -> str:
-        parts = [
-            _SYSTEM_PREAMBLE,
-            f"Test: {test_name}",
-            f"Failure/error: {failure_message}",
-        ]
-        if log_snippet:
-            parts.append(f"Log snippet:\n{log_snippet}")
-        if screenshot_path:
-            parts.append(
-                f"A screenshot was saved at: {screenshot_path} "
-                "(you cannot see the pixels; suggest based on typical UI issues)."
-            )
-        parts.append(
-            "Fill fix_markdown with a concise Playwright sync Page Object fix "
-            "(prefer get_resilient_*; cite standards docs if unsure). "
-            "Do not invent Selenium or async code."
+        return validate_or_fallback(
+            text,
+            failure_message,
+            test_name=test_name,
+            provider="ollama",
         )
-        return "\n\n".join(parts)
 
     def _generate(self, prompt: str, test_name: str = "") -> tuple[bool, str]:
         """
@@ -96,7 +70,7 @@ class OllamaClient(LLMClient):
             "model": self.model,
             "prompt": prompt,
             "stream": False,
-            "format": ollama_format_schema(),
+            "format": fix_suggestion_json_schema(),
             "options": {"temperature": 0},
         }
         logger.info(

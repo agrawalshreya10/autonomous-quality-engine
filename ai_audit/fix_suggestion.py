@@ -12,6 +12,21 @@ logger = logging.getLogger("ai_audit.fix_suggestion")
 
 Category = Literal["Locator", "Timing", "Data", "Environment"]
 
+# Short, stable preamble — fold project rules once (ai-audit-governance.mdc §2 Instruction folding).
+SYSTEM_PREAMBLE = (
+    "You are a Quality Architect for this Playwright Python suite. "
+    "Output Playwright sync_api only; no Selenium; no async. "
+    "Prefer BasePage get_resilient_* helpers; do not use parent–child .or_() unions. "
+    "Respond with JSON only matching the schema fields: "
+    "category (Locator|Timing|Data|Environment), root_cause, fix_markdown, confidence (0-1)."
+)
+
+_FIX_GUIDANCE = (
+    "Fill fix_markdown with a concise Playwright sync Page Object fix "
+    "(prefer get_resilient_*; cite standards docs if unsure). "
+    "Do not invent Selenium or async code."
+)
+
 _LOCATOR_KEYWORDS = (
     "locator",
     "selector",
@@ -44,11 +59,26 @@ _FALLBACK_FIX = (
     "Avoid parent–child `.or_()` unions that violate strict mode."
 )
 
+# Banned patterns in suggested Fix code (ai-audit-governance.mdc §3). Labels are for logs/fallback reasons.
+_BANNED_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bfrom\s+selenium\b", re.IGNORECASE), "selenium import"),
+    (re.compile(r"\bimport\s+selenium\b", re.IGNORECASE), "selenium import"),
+    (re.compile(r"\bWebDriverWait\b"), "WebDriverWait"),
+    (re.compile(r"\bexpected_conditions\b"), "expected_conditions"),
+    (re.compile(r"\bdriver\.find_element\b"), "driver.find_element"),
+    (re.compile(r"\bBy\.(?:ID|XPATH|CSS_SELECTOR|NAME|CLASS_NAME|TAG_NAME|LINK_TEXT)\b"), "Selenium By."),
+    (re.compile(r"\bget_by_xpath\b"), "get_by_xpath"),
+    (re.compile(r"\bquerySelector\b"), "querySelector"),
+    (re.compile(r"\bplaywright\.async_api\b"), "playwright.async_api"),
+    (re.compile(r"\basync\s+def\b"), "async def"),
+    (re.compile(r"\bawait\s+\w"), "await"),
+)
+
 _ROOT_CAUSE_MAX_CHARS = 800
 
 
 class FixSuggestion(BaseModel):
-    """Validated Ollama assistant reply for a single failure analysis."""
+    """Validated assistant reply for a single failure analysis (Ollama or Gemini)."""
 
     category: Category
     root_cause: str = Field(min_length=1)
@@ -64,9 +94,37 @@ class FixSuggestion(BaseModel):
         return stripped
 
 
-def ollama_format_schema() -> dict:
-    """JSON Schema for Ollama ``/api/generate`` ``format`` (constrained decoding)."""
+def fix_suggestion_json_schema() -> dict:
+    """JSON Schema for constrained decoding (Ollama ``format``, Gemini ``response_schema``)."""
     return FixSuggestion.model_json_schema()
+
+
+# Backward-compatible alias used by older call sites / docs.
+ollama_format_schema = fix_suggestion_json_schema
+
+
+def build_analysis_prompt(
+    *,
+    test_name: str,
+    failure_message: str,
+    log_snippet: str = "",
+    screenshot_path: str | None = None,
+) -> str:
+    """Shared Quality Architect prompt for both Ollama and Gemini."""
+    parts = [
+        SYSTEM_PREAMBLE,
+        f"Test: {test_name}",
+        f"Failure/error: {failure_message}",
+    ]
+    if log_snippet:
+        parts.append(f"Log snippet:\n{log_snippet}")
+    if screenshot_path:
+        parts.append(
+            f"A screenshot was saved at: {screenshot_path} "
+            "(you cannot see the pixels; suggest based on typical UI issues)."
+        )
+    parts.append(_FIX_GUIDANCE)
+    return "\n\n".join(parts)
 
 
 def render_suggestion_markdown(suggestion: FixSuggestion) -> str:
@@ -107,8 +165,8 @@ def heuristic_fallback(
     reason: str,
 ) -> str:
     """
-    Emit deterministic HEURISTIC_FALLBACK markdown when schema validation fails
-    or ``fix_markdown`` is empty.
+    Emit deterministic HEURISTIC_FALLBACK markdown when schema validation fails,
+    ``fix_markdown`` is empty, or banned patterns are found.
     """
     category = infer_category(failure_message)
     root_cause = truncate_root_cause(failure_message)
@@ -124,6 +182,19 @@ def heuristic_fallback(
         else "*HEURISTIC_FALLBACK*\n\n"
     )
     return header + render_suggestion_markdown(suggestion)
+
+
+def find_banned_patterns(text: str) -> list[str]:
+    """
+    Return labels for banned framework patterns in suggested fix text.
+
+    Scans ``fix_markdown`` only (not root_cause) so traceback quotes do not false-positive.
+    """
+    hits: list[str] = []
+    for pattern, label in _BANNED_PATTERNS:
+        if pattern.search(text) and label not in hits:
+            hits.append(label)
+    return hits
 
 
 def _strip_json_fences(text: str) -> str:
@@ -154,19 +225,37 @@ def validate_or_fallback(
     failure_message: str,
     *,
     test_name: str = "",
+    provider: str = "",
 ) -> str:
     """
-    Validate structured Ollama JSON; on failure log WARNING and return HEURISTIC_FALLBACK.
+    Validate structured model JSON and policy-scan ``fix_markdown``.
+
+    On schema or banned-pattern failure, log WARNING and return HEURISTIC_FALLBACK.
     """
     try:
         suggestion = parse_fix_suggestion(raw_text)
     except (ValidationError, ValueError, TypeError) as exc:
         logger.warning(
-            "Ollama structured output validation failed "
-            "(test_name=%r, reason=%s); emitting HEURISTIC_FALLBACK",
+            "Structured output validation failed "
+            "(provider=%s, test_name=%r, reason=%s); emitting HEURISTIC_FALLBACK",
+            provider or "unknown",
             test_name,
             exc,
         )
         return heuristic_fallback(failure_message, reason=f"validation failed: {exc}")
+
+    violations = find_banned_patterns(suggestion.fix_markdown)
+    if violations:
+        logger.warning(
+            "Banned patterns in fix_markdown "
+            "(provider=%s, test_name=%r, violations=%s); emitting HEURISTIC_FALLBACK",
+            provider or "unknown",
+            test_name,
+            violations,
+        )
+        return heuristic_fallback(
+            failure_message,
+            reason=f"banned pattern: {violations[0]}",
+        )
 
     return render_suggestion_markdown(suggestion)
