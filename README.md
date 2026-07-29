@@ -52,7 +52,7 @@ Optional: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`) if you
 
 ## Docker (local smoke)
 
-Phase 1 containerizes the **current** `pytest -m smoke` suite for local/CI parity. Pass `BASE_URL` and credentials as **environment variables** (or `--env-file`); do not hardcode them in the image.
+Phase 1 containerizes the **current** `pytest -m smoke` suite for local/CI parity. Pass `BASE_URL` and credentials as **environment variables** (or a smoke-only `--env-file`); do not hardcode them in the image. Prefer explicit `-e` flags or [`.env.smoke`](config/env.smoke.example) — do **not** pass the general `.env` (it may contain `GEMINI_API_KEY` / Ollama settings the smoke runner does not need).
 
 ```bash
 # Build (from repository root)
@@ -66,11 +66,12 @@ docker run --rm \
   -e ORANGEHRM_PASSWORD=admin123 \
   aqe-smoke
 
-# Or load vars from a local env file (never commit real secrets)
-docker run --rm --env-file .env aqe-smoke
+# Or load a smoke-only env file (copy config/env.smoke.example → .env.smoke; never commit secrets)
+cp config/env.smoke.example .env.smoke
+docker run --rm --env-file .env.smoke aqe-smoke
 
 # Copy reports out of a named container if you need artifacts on the host
-docker run --name aqe-smoke-run --env-file .env aqe-smoke
+docker run --name aqe-smoke-run --env-file .env.smoke aqe-smoke
 docker cp aqe-smoke-run:/app/reports ./reports-from-docker
 docker rm aqe-smoke-run
 ```

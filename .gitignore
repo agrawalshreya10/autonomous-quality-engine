@@ -27,6 +27,7 @@ ENV/
 
 # Environment and secrets
 .env
+.env.smoke
 .env.local
 *.local
 
