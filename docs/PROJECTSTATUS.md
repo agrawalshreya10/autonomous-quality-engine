@@ -42,7 +42,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 8. **Docker (Phase 1 smoke)** — Build and run the smoke suite in a container (no host `.venv` required; image runs as non-root `aqe`). Pass `BASE_URL` / credentials via `-e` or smoke-only `.env.smoke` (`config/env.smoke.example`) — never bake secrets into the image, and do not pass general `.env` (AI keys). See root [README.md](../README.md#docker-local-smoke).
 
-9. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: **`./scripts/run_failure_analyzer.sh`** (uses `.venv`; avoids macOS `python3` → Homebrew alias issues) or `.venv/bin/python -m ai_audit.failure_analyzer …`. Gemini (requires `GEMINI_API_KEY`): add `--client gemini --model gemini-3.1-flash-lite-preview` (or omit `--model` to use the default). CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)). Reference docs for the SDK + API surface: [reference/gemini-genai-sdk-docs.md](reference/gemini-genai-sdk-docs.md).
+9. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: **`./scripts/run_failure_analyzer.sh`** (uses `.venv`; avoids macOS `python3` → Homebrew alias issues) or `.venv/bin/python -m ai_audit.failure_analyzer …`. Gemini (requires `GEMINI_API_KEY`): add `--client gemini --model gemini-3.1-flash-lite` (or omit `--model` to use the default). CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)). Reference docs for the SDK + API surface: [reference/gemini-genai-sdk-docs.md](reference/gemini-genai-sdk-docs.md).
 
 ---
 
@@ -77,7 +77,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 | **Pages** | Login, dashboard, PIM (employee list + add employee), leave list — all use `BasePage` interactions |
 | **Tests** | 3 smoke + 5 regression (PIM + leave) |
 | **Fixtures** (`tests/conftest.py`) | `page`, `page_factory`, `logged_in_page_factory`, failure screenshots, `failures.txt` |
-| **AI audit** | **Automatic Local Failure Analysis via Ollama** (pytest hook), `GeminiClient` (`gemini-3.1-flash-lite-preview`); `failure_analyzer --client ollama\|gemini` with smart truncation |
+| **AI audit** | **Automatic Local Failure Analysis via Ollama** (pytest hook), `GeminiClient` (`gemini-3.1-flash-lite`); `failure_analyzer --client ollama\|gemini` with smart truncation |
 | **CI** (`../.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts; separate AI failure analysis workflow ([ai-failure-analysis.yml](../.github/workflows/ai-failure-analysis.yml)) |
 
 There are no `TODO` / `FIXME` markers in first-party project code under `core/`, `config/`, `pages/`, `tests/`, `ai_audit/`, or `utils/`.
@@ -90,7 +90,7 @@ There are no `TODO` / `FIXME` markers in first-party project code under `core/`,
 
 2. **`utils/` integration** — **Resolved:** `truncate_for_log`, interaction loggers, and `BasePage` are wired; all page objects route critical actions through `self.click` / `self.fill` with descriptive `element_label` values.
 
-3. **`ai_audit` backends** — **Resolved:** `LLMClient` is implemented by **Ollama** (default, local) and **Gemini** (`GeminiClient`, `GEMINI_API_KEY`, `--client gemini`). Default Gemini model is **`gemini-3.1-flash-lite-preview`** (see `.cursor/rules/ai-audit-governance.mdc`).
+3. **`ai_audit` backends** — **Resolved:** `LLMClient` is implemented by **Ollama** (default, local) and **Gemini** (`GeminiClient`, `GEMINI_API_KEY`, `--client gemini`). Default Gemini model is **`gemini-3.1-flash-lite`** (see `.cursor/rules/ai-audit-governance.mdc`).
 
 4. **Test rigor** — Some assertions are loose (e.g. PIM search allows zero rows; add-employee uses fixed names).
 

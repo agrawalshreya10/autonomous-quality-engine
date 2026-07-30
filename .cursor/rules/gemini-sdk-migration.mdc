@@ -14,7 +14,7 @@ For the canonical package, model, and initialization requirements, follow **`ai-
 
 - **Library:** `google-generativeai`
 - **Pattern:** `genai.GenerativeModel()`
-- **Decommissioned model IDs:** `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-1.0-pro`
+- **Decommissioned model IDs:** `gemini-3.1-flash-lite-preview` (shut down 2026-05-25), `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-1.0-pro`
 
 ## Enforcement action
 

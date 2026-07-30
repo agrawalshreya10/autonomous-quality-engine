@@ -180,11 +180,11 @@ PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers .venv/bin/playwright install chrom
 Set `AI_PROVIDER=gemini` and `GEMINI_API_KEY` in `.env` (or export for the shell). CI uses the same variables in the AI Failure Analysis workflow.
 
 ```bash
-# --model optional: omit to use DEFAULT_GEMINI_MODEL in ai_audit/gemini_client.py (gemini-3.1-flash-lite-preview)
-AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3.1-flash-lite-preview --artifacts-dir reports
+# --model optional: omit to use DEFAULT_GEMINI_MODEL in ai_audit/gemini_client.py (gemini-3.1-flash-lite)
+AI_PROVIDER=gemini ./scripts/run_failure_analyzer.sh --client gemini --model gemini-3.1-flash-lite --artifacts-dir reports
 ```
 
-`gemini-1.5-*` model IDs are **not** supported here (decommissioned); use `gemini-3.1-flash-lite-preview` (default) or `gemini-3.1-flash-preview` as an explicit override. See **`.cursor/rules/ai-audit-governance.mdc`** for the canonical policy.
+`gemini-1.5-*` and preview `gemini-3.1-flash-lite-preview` model IDs are **not** supported here (decommissioned); use `gemini-3.1-flash-lite` (GA default) or `gemini-3.5-flash` as an explicit override. See **`.cursor/rules/ai-audit-governance.mdc`** for the canonical policy.
 
 Optional one-shot override without changing `.env`: `--client gemini` or `--client ollama` (see `./scripts/run_failure_analyzer.sh --help`).
 

@@ -215,7 +215,7 @@ def main() -> int:
         help=(
             f"Optional model override (Ollama default: {DEFAULT_OLLAMA_MODEL}, "
             f"Gemini default: {DEFAULT_GEMINI_MODEL}; "
-            "Gemini allowlist: gemini-3.1-flash-lite-preview, gemini-3.1-flash-preview)"
+            "Gemini allowlist: gemini-3.1-flash-lite, gemini-3.5-flash)"
         ),
     )
     parser.add_argument("--out", type=Path, help="Write suggestions to file")
