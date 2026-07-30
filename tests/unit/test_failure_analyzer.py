@@ -60,6 +60,7 @@ class TestOllamaHealthUrl:
 
 class TestGeminiAllowlist:
     def test_default_and_override_allowed(self) -> None:
+        assert DEFAULT_GEMINI_MODEL == "gemini-3.1-flash-lite"
         assert validate_gemini_model(DEFAULT_GEMINI_MODEL) == DEFAULT_GEMINI_MODEL
         assert validate_gemini_model("gemini-3.5-flash") == "gemini-3.5-flash"
         assert ALLOWED_GEMINI_MODELS == {
