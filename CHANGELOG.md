@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Added
+
+- **CI Docker smoke** — GitHub Actions **smoke** job builds `aqe-smoke` (Buildx + GHA cache), runs the container with demo env (no committed `.env`), copies reports via `docker cp`, and uploads **`smoke-report`**. Full **test** job remains host Python.
+
 ### Fixed
 
 - **Gemini GA model (#32)** — `DEFAULT_GEMINI_MODEL` / allowlist swapped from the decommissioned `gemini-3.1-flash-lite-preview` (shut down 2026-05-25) to GA **`gemini-3.1-flash-lite`**; override option is now GA **`gemini-3.5-flash`** ([#32](https://github.com/agrawalshreya10/autonomous-quality-engine/issues/32)). CI workflow, docs, and governance rule synced.
@@ -22,7 +26,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ### Added
 
-- **Docker (Phase 1)** — Root `Dockerfile` and `.dockerignore` for local-first `pytest -m smoke` (Python 3.12 + Playwright Chromium). `BASE_URL` / credentials remain env-injected. CI image wiring is a follow-up.
+- **Docker (Phase 1)** — Root `Dockerfile` and `.dockerignore` for local-first `pytest -m smoke` (Python 3.12 + Playwright Chromium). `BASE_URL` / credentials remain env-injected. CI image wiring landed later under [Unreleased].
 - **ADR** — [`docs/decisions/python-api-vs-typescript-ui.md`](docs/decisions/python-api-vs-typescript-ui.md): Python repo is **API-first**; UI E2E expansion moves to a separate TypeScript Playwright project; freeze growing Python UI coverage (keep thin smoke).
 - **Shared AI fix contract** — `ai_audit/fix_suggestion.py` now drives **both** Ollama and Gemini: shared `SYSTEM_PREAMBLE` / `build_analysis_prompt`, `FixSuggestion` schema, `validate_or_fallback`, and **banned-pattern** scan on `fix_markdown` (Selenium / async / `get_by_xpath`, etc.) → `HEURISTIC_FALLBACK`.
 - **Unit tests** — `tests/unit/test_fix_suggestion.py` covers valid JSON, invalid category, empty body, fenced JSON, and banned-pattern rejection (no live LLM).

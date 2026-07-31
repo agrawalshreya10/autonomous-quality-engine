@@ -12,11 +12,11 @@ Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **P
 - **POM + Factory**: `core/base_page.py`, `core/page_factory.py`, page classes in `pages/`
 - **pytest**: Markers (`smoke`, `regression`, `pim`, `leave`), fixtures, parallel with **pytest-xdist**
 - **Reporting**: pytest-html report in `reports/`; screenshots on failure
-- **CI/CD**: GitHub Actions on push/PR; smoke job + full suite; upload reports as artifacts
+- **CI/CD**: GitHub Actions on push/PR; Docker smoke job + host Python full suite; upload reports as artifacts
 - **AI audit**: **Ollama** (local) or **Gemini** (cloud); optional auto-run after local failures; see [AI failure analysis](#ai-failure-analysis)
 - **Docs map**: [`docs/README.md`](docs/README.md) links architecture, decisions, historical plans, and reference notes.
 - **Direction**: Python is **API-first**; keep thin UI smoke here. Broader UI E2E expands in a separate TypeScript Playwright project ([decision](docs/decisions/python-api-vs-typescript-ui.md)).
-- **Docker**: Local-first smoke image — see [Docker (local smoke)](#docker-local-smoke).
+- **Docker**: Smoke image for local runs and the CI **smoke** job — see [Docker (local smoke)](#docker-local-smoke).
 
 ## Requirements
 
@@ -52,7 +52,7 @@ Optional: `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`) if you
 
 ## Docker (local smoke)
 
-Phase 1 containerizes the **current** `pytest -m smoke` suite for local/CI parity. Pass `BASE_URL` and credentials as **environment variables** (or a smoke-only `--env-file`); do not hardcode them in the image. Prefer explicit `-e` flags or [`.env.smoke`](config/env.smoke.example) — do **not** pass the general `.env` (it may contain `GEMINI_API_KEY` / Ollama settings the smoke runner does not need).
+Phase 1 containerizes the **current** `pytest -m smoke` suite for local and CI parity (the GitHub Actions **smoke** job builds and runs this image). Pass `BASE_URL` and credentials as **environment variables** (or a smoke-only `--env-file`); do not hardcode them in the image. Prefer explicit `-e` flags or [`.env.smoke`](config/env.smoke.example) — do **not** pass the general `.env` (it may contain `GEMINI_API_KEY` / Ollama settings the smoke runner does not need).
 
 ```bash
 # Build (from repository root)
@@ -122,8 +122,8 @@ Always run **`.venv/bin/pytest`** (or activate the venv and still use the prefix
 
 - **Trigger**: Push or PR to `main`/`master`; or run manually via **Actions** tab.
 - **Workflow** [`.github/workflows/test.yml`](.github/workflows/test.yml) (**Test Suite**):
-  - **smoke**: Runs `pytest -m smoke`, uploads `smoke-report` artifact.
-  - **test**: Full suite with `pytest -n auto`, uploads `test-report-3.12` artifact.
+  - **smoke**: Builds `aqe-smoke` (Buildx + GHA cache), runs the image with demo env (`HEADLESS`, `BASE_URL`, credentials), copies `/app/reports` via `docker cp`, uploads **`smoke-report`** artifact.
+  - **test**: Host Python full suite with `pytest -n auto`, uploads `test-report-3.12` artifact (not containerized yet).
 - **Artifacts**: Download from the run summary to get `reports/report.html` and `reports/screenshots/`.
 - **AI failure analysis (CI)**: On **Test Suite** failure, [`.github/workflows/ai-failure-analysis.yml`](.github/workflows/ai-failure-analysis.yml) downloads artifacts from that run and can run Gemini-based analysis. Requires repository secrets **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT with **Actions: Read** on the repo — `GITHUB_TOKEN` cannot download another run’s artifacts) and optional **`GEMINI_API_KEY`**. See [docs/decisions/ci-ai-failure-analysis.md](docs/decisions/ci-ai-failure-analysis.md) and [reference/github-actions-trigger-workflow.md](docs/reference/github-actions-trigger-workflow.md). Run the analyzer locally using the commands in [AI failure analysis](#ai-failure-analysis).
 

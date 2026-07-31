@@ -12,17 +12,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build smoke image
+        uses: docker/build-push-action@v6
         with:
-          python-version: "3.12"
-          cache: "pip"
-      - run: pip install -r requirements.txt
-      - run: playwright install --with-deps chromium
-      - run: |
-          mkdir -p reports/screenshots
-          pytest tests/ -m smoke -v --tb=short --html=reports/report.html --self-contained-html
-        env:
-          HEADLESS: "true"
+          context: .
+          push: false
+          load: true
+          tags: aqe-smoke:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run smoke in container
+        run: |
+          mkdir -p reports
+          set +e
+          docker run --name aqe-smoke-run \
+            -e HEADLESS=true \
+            -e BASE_URL=https://opensource-demo.orangehrmlive.com \
+            -e ORANGEHRM_USER=Admin \
+            -e ORANGEHRM_PASSWORD=admin123 \
+            aqe-smoke
+          status=$?
+          docker cp aqe-smoke-run:/app/reports/. reports/ || true
+          docker rm -f aqe-smoke-run
+          exit $status
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
