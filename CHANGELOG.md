@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ### Fixed
 
+- **Leave CI flake (demo 403)** — `LeaveListPage` detects OrangeHRM **Module Forbidden**; leave regression tests **skip** instead of timing out on Search. Search button uses resilient role+CSS locator (aligned with PIM).
 - **Gemini GA model (#32)** — `DEFAULT_GEMINI_MODEL` / allowlist swapped from the decommissioned `gemini-3.1-flash-lite-preview` (shut down 2026-05-25) to GA **`gemini-3.1-flash-lite`**; override option is now GA **`gemini-3.5-flash`** ([#32](https://github.com/agrawalshreya10/autonomous-quality-engine/issues/32)). CI workflow, docs, and governance rule synced.
 - **CHANGELOG** — Removed git conflict markers accidentally committed in the previous merge.
 - **AI audit (#9)** — Ollama TCP health check honors `OLLAMA_BASE_URL` (host/port) instead of hardcoding `localhost:11434`.
