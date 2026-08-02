@@ -6,13 +6,12 @@ from pages.leave.leave_list_page import LeaveListPage
 from pages.pim.employee_list_page import EmployeeListPage
 
 
-def _skip_if_leave_forbidden(leave_page: LeaveListPage) -> None:
-    """Shared OrangeHRM demo intermittently forbids Leave (403); skip rather than flake CI."""
-    if leave_page.is_module_forbidden():
-        pytest.skip(
-            "OrangeHRM demo returned 403 Module Forbidden for Leave "
-            "(module disabled / session ACL on shared site)"
-        )
+def _assert_leave_loaded_or_skip(leave_page: LeaveListPage) -> None:
+    """Assert Leave list loaded, or skip when shared demo returns Module Forbidden."""
+    try:
+        assert leave_page.is_loaded()
+    except PermissionError as exc:
+        pytest.skip(str(exc))
 
 
 @pytest.mark.regression
@@ -21,8 +20,7 @@ def test_leave_open_leave_list(logged_in_page_factory):
     """Navigate to Leave -> Leave list; page loads."""
     leave_page = logged_in_page_factory.get_page(LeaveListPage)
     leave_page.navigate()
-    _skip_if_leave_forbidden(leave_page)
-    assert leave_page.is_loaded()
+    _assert_leave_loaded_or_skip(leave_page)
 
 
 @pytest.mark.regression
@@ -35,5 +33,4 @@ def test_navigation_pim_and_leave(logged_in_page_factory):
 
     leave_page = logged_in_page_factory.get_page(LeaveListPage)
     leave_page.navigate()
-    _skip_if_leave_forbidden(leave_page)
-    assert leave_page.is_loaded()
+    _assert_leave_loaded_or_skip(leave_page)

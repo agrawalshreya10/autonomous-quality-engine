@@ -28,23 +28,33 @@ class LeaveListPage(BasePage):
         return self._page.locator(".oxd-table-body").first
 
     def is_module_forbidden(self) -> bool:
-        """True when the session cannot open Leave (demo ACL / module toggle)."""
+        """True when the session cannot open Leave (demo ACL / module toggle).
+
+        Call only after an access-outcome wait (see ``is_loaded``); ``is_visible``
+        does not wait for the heading to appear.
+        """
         return self.is_visible(
             self.module_forbidden_heading,
             element_label="Module Forbidden heading",
         )
 
     def is_loaded(self) -> bool:
-        """True if leave list chrome is ready (heading/table visibility varies)."""
+        """True if leave list chrome is ready.
+
+        Waits for either Module Forbidden or Search (mutually exclusive demo states),
+        then raises ``PermissionError`` when Leave is forbidden so callers can skip.
+        """
         self.wait_for_url(LEAVE_LIST_URL, timeout_ms=self._settings.timeout_ms)
+        # Mutually exclusive outcomes: wait for one before probing (is_visible is immediate).
+        access_outcome = self.module_forbidden_heading.or_(self.search_button).first
+        self.wait_for_visible(
+            access_outcome,
+            element_label="Leave list Search or Module Forbidden",
+            timeout_ms=self._settings.timeout_ms,
+        )
         if self.is_module_forbidden():
             raise PermissionError(
                 "OrangeHRM Leave returned 403 Module Forbidden "
                 "(shared demo ACL); Search button will not appear."
             )
-        self.wait_for_visible(
-            self.search_button,
-            element_label="Leave list Search button",
-            timeout_ms=self._settings.timeout_ms,
-        )
         return True
