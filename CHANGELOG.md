@@ -8,8 +8,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ## [Unreleased]
 
+### Added
+
+- **CI Docker smoke** — GitHub Actions **smoke** job builds `aqe-smoke` (Buildx + GHA cache), runs the container with demo env (no committed `.env`), copies reports via `docker cp`, and uploads **`smoke-report`**. Full **test** job remains host Python.
+
 ### Fixed
 
+- **Leave CI flake (demo 403)** — `LeaveListPage` waits for **Module Forbidden** or **Search** (outcome `.or_()`), then raises `PermissionError`; leave regression tests **skip** instead of racing an immediate `is_visible` probe / timing out on Search. Search button uses resilient role+CSS locator (aligned with PIM).
+- **CI Docker smoke env** — Smoke container receives `GITHUB_ACTIONS=true` so `pytest_sessionfinish` does not treat containerized CI as a local run and invoke the failure analyzer.
 - **Gemini GA model (#32)** — `DEFAULT_GEMINI_MODEL` / allowlist swapped from the decommissioned `gemini-3.1-flash-lite-preview` (shut down 2026-05-25) to GA **`gemini-3.1-flash-lite`**; override option is now GA **`gemini-3.5-flash`** ([#32](https://github.com/agrawalshreya10/autonomous-quality-engine/issues/32)). CI workflow, docs, and governance rule synced.
 - **CHANGELOG** — Removed git conflict markers accidentally committed in the previous merge.
 - **AI audit (#9)** — Ollama TCP health check honors `OLLAMA_BASE_URL` (host/port) instead of hardcoding `localhost:11434`.
@@ -22,7 +28,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ### Added
 
-- **Docker (Phase 1)** — Root `Dockerfile` and `.dockerignore` for local-first `pytest -m smoke` (Python 3.12 + Playwright Chromium). `BASE_URL` / credentials remain env-injected. CI image wiring is a follow-up.
+- **Docker (Phase 1)** — Root `Dockerfile` and `.dockerignore` for local-first `pytest -m smoke` (Python 3.12 + Playwright Chromium). `BASE_URL` / credentials remain env-injected. CI image wiring landed later under [Unreleased].
 - **ADR** — [`docs/decisions/python-api-vs-typescript-ui.md`](docs/decisions/python-api-vs-typescript-ui.md): Python repo is **API-first**; UI E2E expansion moves to a separate TypeScript Playwright project; freeze growing Python UI coverage (keep thin smoke).
 - **Shared AI fix contract** — `ai_audit/fix_suggestion.py` now drives **both** Ollama and Gemini: shared `SYSTEM_PREAMBLE` / `build_analysis_prompt`, `FixSuggestion` schema, `validate_or_fallback`, and **banned-pattern** scan on `fix_markdown` (Selenium / async / `get_by_xpath`, etc.) → `HEURISTIC_FALLBACK`.
 - **Unit tests** — `tests/unit/test_fix_suggestion.py` covers valid JSON, invalid category, empty body, fenced JSON, and banned-pattern rejection (no live LLM).

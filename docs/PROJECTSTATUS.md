@@ -1,6 +1,6 @@
 # Autonomous Quality Engine — project status
 
-**Last updated:** 2026-07-29 — Strategy: **Python = API-first**; UI E2E expansion moves to a **separate TypeScript Playwright** project; freeze growing Python UI coverage (keep thin smoke). Phase 1 Docker for current smoke (local-first). See [ARCHITECTURE.md](ARCHITECTURE.md#strategy-direction-api-first) and [decisions/python-api-vs-typescript-ui.md](decisions/python-api-vs-typescript-ui.md). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
+**Last updated:** 2026-07-29 — Strategy: **Python = API-first**; UI E2E expansion moves to a **separate TypeScript Playwright** project; freeze growing Python UI coverage (keep thin smoke). Phase 1 Docker for current smoke (**local + CI smoke job**). See [ARCHITECTURE.md](ARCHITECTURE.md#strategy-direction-api-first) and [decisions/python-api-vs-typescript-ui.md](decisions/python-api-vs-typescript-ui.md). **Automatic Local Failure Analysis via Ollama** and CI B+D AI workflow unchanged.
 
 This file summarizes what is implemented, what is thin or missing, and how to run the suite locally. Refresh it when the codebase or test scope changes significantly. **Chronological notable changes** are recorded in [CHANGELOG.md](../CHANGELOG.md) at the repository root.
 
@@ -40,7 +40,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 7. **Reports** — `reports/report.html`, `reports/screenshots/` (on failure), `reports/failures.txt` (for AI audit). After a **local** failed run with Ollama up, `reports/ai_suggestions.md` holds model output (same path when using `--out` manually).
 
-8. **Docker (Phase 1 smoke)** — Build and run the smoke suite in a container (no host `.venv` required; image runs as non-root `aqe`). Pass `BASE_URL` / credentials via `-e` or smoke-only `.env.smoke` (`config/env.smoke.example`) — never bake secrets into the image, and do not pass general `.env` (AI keys). See root [README.md](../README.md#docker-local-smoke).
+8. **Docker (Phase 1 smoke)** — Build and run the smoke suite in a container (no host `.venv` required; image runs as non-root `aqe`). Same image is used by the GitHub Actions **smoke** job. Pass `BASE_URL` / credentials via `-e` or smoke-only `.env.smoke` (`config/env.smoke.example`) — never bake secrets into the image, and do not pass general `.env` (AI keys). See root [README.md](../README.md#docker-local-smoke).
 
 9. **AI failure analysis** — **Automatic Local Failure Analysis via Ollama**: When tests fail locally, Ollama automatically analyzes failures with smart truncation (2K char limit) and enhanced prompts; output is written to `reports/ai_suggestions.md`. Manual: **`./scripts/run_failure_analyzer.sh`** (uses `.venv`; avoids macOS `python3` → Homebrew alias issues) or `.venv/bin/python -m ai_audit.failure_analyzer …`. Gemini (requires `GEMINI_API_KEY`): add `--client gemini --model gemini-3.1-flash-lite` (or omit `--model` to use the default). CI uses separate on-demand analysis workflow (see [docs/decisions/ci-ai-failure-analysis.md](decisions/ci-ai-failure-analysis.md)). Reference docs for the SDK + API surface: [reference/gemini-genai-sdk-docs.md](reference/gemini-genai-sdk-docs.md).
 
@@ -61,7 +61,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 
 | Phase | Focus |
 |-------|--------|
-| **1** | **Infrastructure** — Dockerize **current** `pytest -m smoke` for local/CI parity (`Dockerfile`; CI image wiring is follow-up). |
+| **1** | **Infrastructure** — Dockerize **current** `pytest -m smoke` for local/CI parity (`Dockerfile` + CI **smoke** job on image; full **test** job still host Python). |
 | **2** | **API-first** — Clients and runtime payloads (e.g. Faker); not Python UI expansion. |
 | **3** | **CI/CD & reporting** — Pipeline hardening plus **Allure** (`allure-pytest`) alongside **pytest-html**; dependency remains commented in `requirements.txt` until this phase. |
 
@@ -78,7 +78,7 @@ This file summarizes what is implemented, what is thin or missing, and how to ru
 | **Tests** | 3 smoke + 5 regression (PIM + leave) |
 | **Fixtures** (`tests/conftest.py`) | `page`, `page_factory`, `logged_in_page_factory`, failure screenshots, `failures.txt` |
 | **AI audit** | **Automatic Local Failure Analysis via Ollama** (pytest hook), `GeminiClient` (`gemini-3.1-flash-lite`); `failure_analyzer --client ollama\|gemini` with smart truncation |
-| **CI** (`../.github/workflows/test.yml`) | Smoke job + full suite with pytest-xdist, artifacts; separate AI failure analysis workflow ([ai-failure-analysis.yml](../.github/workflows/ai-failure-analysis.yml)) |
+| **CI** (`../.github/workflows/test.yml`) | **smoke** builds/runs `aqe-smoke` (artifact `smoke-report`); **test** is host Python + pytest-xdist; separate AI failure analysis workflow ([ai-failure-analysis.yml](../.github/workflows/ai-failure-analysis.yml)) |
 
 There are no `TODO` / `FIXME` markers in first-party project code under `core/`, `config/`, `pages/`, `tests/`, `ai_audit/`, or `utils/`.
 
