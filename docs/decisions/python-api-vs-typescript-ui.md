@@ -31,4 +31,4 @@ Playwright’s primary UI tooling and ecosystem momentum for large E2E suites si
 | AI failure analysis, core fixtures, config | Broader browser E2E (→ TS Playwright) |
 | Upcoming API clients / payload tests | — |
 
-Interview and portfolio narrative: Python = infrastructure + thin smoke + (next) CI quality system + API/contracts; TypeScript Playwright = UI depth.
+**How to frame this split:** Python owns infrastructure, thin UI smoke, the CI quality system (next), and API/contracts; TypeScript Playwright owns deeper UI E2E.
