@@ -16,10 +16,10 @@ Playwright’s primary UI tooling and ecosystem momentum for large E2E suites si
 
 ## Decision
 
-1. **This Python repo pivots to API-first** testing (clients, payloads, contract-oriented suites). Roadmap Phase 2 moves toward API payloads/clients (Faker and related data still support that path).
+1. **This Python repo pivots to API-first** testing (clients, payloads, contract-oriented suites). Roadmap **Phase 2** covers that work; **execution order** runs **Phase 3** (demo CI/observability) before Phase 2 so the portfolio gate story is ready first.
 2. **UI E2E expansion** (broader OrangeHRM flows, richer page objects) moves to a **separate TypeScript Playwright** project — not grown further here.
 3. **Keep a thin Python UI smoke** (current `-m smoke` / existing page objects) until the TS project exists and can own browser coverage. Do **not** expand Python UI page objects or UI regression depth in the meantime.
-4. **Phase 1 Docker** stays: containerize the **current** pytest smoke for local/CI parity — valid regardless of the API pivot.
+4. **Phase 1 Docker** stays and is **complete** (local image + CI smoke job). Portfolio **execution order** prioritizes **Phase 3** (CI gates/observability/Allure) for demo readiness, then **Phase 2** API clients/contracts — valid regardless of the UI handoff to TypeScript.
 
 ---
 
@@ -31,4 +31,4 @@ Playwright’s primary UI tooling and ecosystem momentum for large E2E suites si
 | AI failure analysis, core fixtures, config | Broader browser E2E (→ TS Playwright) |
 | Upcoming API clients / payload tests | — |
 
-Interview and portfolio narrative: Python = API + infrastructure + thin smoke; TypeScript Playwright = UI depth.
+Interview and portfolio narrative: Python = infrastructure + thin smoke + (next) CI quality system + API/contracts; TypeScript Playwright = UI depth.
