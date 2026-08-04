@@ -1,6 +1,6 @@
-# Autonomous Quality Engine
+# Failure-Aware Test Framework
 
-Enterprise-grade **Playwright** (Python) automation for **OrangeHRM**, using **Page Object Model** with **Factory Pattern**, **GitHub Actions** CI/CD, and optional **AI failure analysis** (Ollama or Gemini).
+**Playwright (Python)** test framework for **OrangeHRM** with **Page Object Model** + **Factory Pattern**, **GitHub Actions** CI/CD, Dockerized smoke, and optional **LLM-assisted failure triage** (Ollama or Gemini). Short brand: **FATF**.
 
 **System under test (default):** the **public demo** only — base URL `https://opensource-demo.orangehrmlive.com/` (e.g. [demo login](https://opensource-demo.orangehrmlive.com/web/index.php/auth/login)). CI and the default `BASE_URL` in [`config/env.example`](config/env.example) use this host. The suite is **not** aimed at OrangeHRM’s marketing site, customer production tenants, or any live product URL other than that shared demo (or whatever you set in `BASE_URL` for local/Docker instances).
 
@@ -29,7 +29,7 @@ Use a **Python 3.12+** interpreter (see `pyproject.toml`). Prefer **explicit `.v
 
 ```bash
 # Clone and enter project
-cd autonomous-quality-engine
+cd failure-aware-test-framework
 
 # Create venv (pick the command that resolves to Python 3.12+ on your machine)
 python3.12 -m venv .venv
@@ -56,7 +56,7 @@ Phase 1 containerizes the **current** `pytest -m smoke` suite for local and CI p
 
 ```bash
 # Build (from repository root)
-docker build -t aqe-smoke .
+docker build -t fatf-smoke .
 
 # Run against the public demo (defaults in config if BASE_URL unset)
 docker run --rm \
@@ -64,16 +64,16 @@ docker run --rm \
   -e BASE_URL=https://opensource-demo.orangehrmlive.com \
   -e ORANGEHRM_USER=Admin \
   -e ORANGEHRM_PASSWORD=admin123 \
-  aqe-smoke
+  fatf-smoke
 
 # Or load a smoke-only env file (copy config/env.smoke.example → .env.smoke; never commit secrets)
 cp config/env.smoke.example .env.smoke
-docker run --rm --env-file .env.smoke aqe-smoke
+docker run --rm --env-file .env.smoke fatf-smoke
 
 # Copy reports out of a named container if you need artifacts on the host
-docker run --name aqe-smoke-run --env-file .env.smoke aqe-smoke
-docker cp aqe-smoke-run:/app/reports ./reports-from-docker
-docker rm aqe-smoke-run
+docker run --name fatf-smoke-run --env-file .env.smoke fatf-smoke
+docker cp fatf-smoke-run:/app/reports ./reports-from-docker
+docker rm fatf-smoke-run
 ```
 
 Strategy note: this Python repo is **API-first** going forward; UI E2E expansion moves to a separate TypeScript Playwright project. Docker here targets the thin smoke gate only — see [docs/decisions/python-api-vs-typescript-ui.md](docs/decisions/python-api-vs-typescript-ui.md).
@@ -122,7 +122,7 @@ Always run **`.venv/bin/pytest`** (or activate the venv and still use the prefix
 
 - **Trigger**: Push or PR to `main`/`master`; or run manually via **Actions** tab.
 - **Workflow** [`.github/workflows/test.yml`](.github/workflows/test.yml) (**Test Suite**):
-  - **smoke**: Builds `aqe-smoke` (Buildx + GHA cache), runs the image with demo env (`HEADLESS`, `BASE_URL`, credentials), copies `/app/reports` via `docker cp`, uploads **`smoke-report`** artifact.
+  - **smoke**: Builds `fatf-smoke` (Buildx + GHA cache), runs the image with demo env (`HEADLESS`, `BASE_URL`, credentials), copies `/app/reports` via `docker cp`, uploads **`smoke-report`** artifact.
   - **test**: Host Python full suite with `pytest -n auto`, uploads `test-report-3.12` artifact (not containerized yet).
 - **Artifacts**: Download from the run summary to get `reports/report.html` and `reports/screenshots/`.
 - **AI failure analysis (CI)**: On **Test Suite** failure, [`.github/workflows/ai-failure-analysis.yml`](.github/workflows/ai-failure-analysis.yml) downloads artifacts from that run and can run Gemini-based analysis. Requires repository secrets **`ACTIONS_ARTIFACT_READ_TOKEN`** (PAT with **Actions: Read** on the repo — `GITHUB_TOKEN` cannot download another run’s artifacts) and optional **`GEMINI_API_KEY`**. See [docs/decisions/ci-ai-failure-analysis.md](docs/decisions/ci-ai-failure-analysis.md) and [reference/github-actions-trigger-workflow.md](docs/reference/github-actions-trigger-workflow.md). Run the analyzer locally using the commands in [AI failure analysis](#ai-failure-analysis).
@@ -191,7 +191,7 @@ Optional one-shot override without changing `.env`: `--client gemini` or `--clie
 ## Project structure
 
 ```
-autonomous-quality-engine/
+failure-aware-test-framework/
 ├── Dockerfile                                  # Phase 1: smoke runner (Python 3.12 + Chromium)
 ├── .dockerignore
 ├── .cursor/mcp.json.example                    # Commit: sample MCP config (copy to .cursor/mcp.json)
@@ -216,7 +216,7 @@ autonomous-quality-engine/
 
 ## Configuration
 
-**OrangeHRM vs. this repo:** `BASE_URL`, `ORANGEHRM_USER`, and `ORANGEHRM_PASSWORD` point at the **OrangeHRM** app you are testing (default: the public demo). They are not separate branding for the Autonomous Quality Engine project itself — see the note at the top of [`config/env.example`](config/env.example).
+**OrangeHRM vs. this repo:** `BASE_URL`, `ORANGEHRM_USER`, and `ORANGEHRM_PASSWORD` point at the **OrangeHRM** app you are testing (default: the public demo). They are not separate branding for the Failure-Aware Test Framework project itself — see the note at the top of [`config/env.example`](config/env.example).
 
 Env vars (or `.env`): `BASE_URL`, `BROWSER`, `HEADLESS`, `TIMEOUT_MS`, `ORANGEHRM_USER`, `ORANGEHRM_PASSWORD`, `IGNORE_HTTPS_ERRORS` (template default `false`; set `true` only for local self-signed HTTPS, never for production). For AI audit: `AI_PROVIDER`, `GEMINI_API_KEY` (Gemini), optional `OLLAMA_MODEL` / `OLLAMA_BASE_URL`. See [`config/env.example`](config/env.example) for TLS notes and examples.
 

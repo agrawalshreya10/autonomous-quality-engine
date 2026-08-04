@@ -22,7 +22,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: aqe-smoke:latest
+          tags: fatf-smoke:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -30,16 +30,16 @@ jobs:
         run: |
           mkdir -p reports
           set +e
-          docker run --name aqe-smoke-run \
+          docker run --name fatf-smoke-run \
             -e GITHUB_ACTIONS=true \
             -e HEADLESS=true \
             -e BASE_URL=https://opensource-demo.orangehrmlive.com \
             -e ORANGEHRM_USER=Admin \
             -e ORANGEHRM_PASSWORD=admin123 \
-            aqe-smoke
+            fatf-smoke
           status=$?
-          docker cp aqe-smoke-run:/app/reports/. reports/ || true
-          docker rm -f aqe-smoke-run
+          docker cp fatf-smoke-run:/app/reports/. reports/ || true
+          docker rm -f fatf-smoke-run
           exit $status
 
       - uses: actions/upload-artifact@v4

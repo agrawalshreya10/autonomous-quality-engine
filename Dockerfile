@@ -1,4 +1,4 @@
-# Autonomous Quality Engine — Phase 1 smoke runner
+# Failure-Aware Test Framework (FATF) — Phase 1 smoke runner
 # Python 3.12 + Playwright Chromium for `pytest -m smoke`.
 # Pass BASE_URL / ORANGEHRM_* (and related) as env at runtime — never bake secrets in.
 
@@ -20,12 +20,12 @@ RUN pip install --upgrade pip \
     && playwright install --with-deps chromium
 
 # Unprivileged runtime user (CWE-250): pytest + Chromium must not run as root
-RUN useradd --create-home --shell /usr/sbin/nologin aqe
-COPY --chown=aqe:aqe . .
+RUN useradd --create-home --shell /usr/sbin/nologin fatf
+COPY --chown=fatf:fatf . .
 
-# pytest-html / screenshots expect this tree; aqe needs /app write + browser read/exec
+# pytest-html / screenshots expect this tree; fatf needs /app write + browser read/exec
 RUN mkdir -p reports/screenshots \
-    && chown -R aqe:aqe /app \
+    && chown -R fatf:fatf /app \
     && chmod -R a+rX /ms-playwright
 
 # Defaults match public demo when unset (config/settings.py); override via `docker run -e`
@@ -33,8 +33,8 @@ RUN mkdir -p reports/screenshots \
 ENV BROWSER=chromium \
     HEADLESS=true
 
-USER aqe
+USER fatf
 
-# Override args as needed, e.g. docker run ... aqe-smoke pytest -m smoke -n auto
+# Override args as needed, e.g. docker run ... fatf-smoke pytest -m smoke -n auto
 CMD ["pytest", "-m", "smoke", "-v", "--tb=short", \
      "--html=reports/report.html", "--self-contained-html"]
