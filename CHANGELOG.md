@@ -10,11 +10,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Ver
 
 ### Changed
 
+- **Project rename** — Display name **Failure-Aware Test Framework** (short brand **FATF**); `pyproject.toml` name `failure-aware-test-framework`. Docker smoke image/user **`fatf-smoke` / `fatf`** (was `aqe-smoke` / `aqe`). Rename the GitHub repository to `failure-aware-test-framework` in **Settings**, then update local `git remote set-url origin`.
 - **Roadmap execution order** — Phase 1 Docker (local + CI smoke) marked **complete**. **Phase 3** (CI DAG, traces, JUnit, Allure, flake policy, portfolio packaging) is **next** for demo readiness; **Phase 2** API clients/contracts follows. Deduplicated Docker smoke from Phase 3 wording. See `docs/ARCHITECTURE.md` / `docs/PROJECTSTATUS.md`.
 
 ### Added
 
-- **CI Docker smoke** — GitHub Actions **smoke** job builds `aqe-smoke` (Buildx + GHA cache), runs the container with demo env (no committed `.env`), copies reports via `docker cp`, and uploads **`smoke-report`**. Full **test** job remains host Python.
+- **CI Docker smoke** — GitHub Actions **smoke** job builds `fatf-smoke` (Buildx + GHA cache), runs the container with demo env (no committed `.env`), copies reports via `docker cp`, and uploads **`smoke-report`**. Full **test** job remains host Python.
 
 ### Fixed
 

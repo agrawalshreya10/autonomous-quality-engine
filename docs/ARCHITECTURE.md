@@ -1,4 +1,4 @@
-# Autonomous Quality Engine — framework architecture
+# Failure-Aware Test Framework — framework architecture
 
 ## Project Overview
 An Enterprise-Grade automation framework for OrangeHRM, designed for a Senior SDET portfolio. 
@@ -51,7 +51,7 @@ Official Playwright **component tests** are **experimental**, run on the **Node.
 Development is grouped into **phases**; items stay numbered for reference. **Execution order for portfolio demo readiness:** Phase 1 *(done)* → **Phase 3 next** (CI quality system) → **Phase 2 after** (API clients/contracts) → Later. Phase numbers are historical labels, not the build sequence.
 
 ### Phase 1 — Infrastructure (Docker / CI–local parity) *(completed)*
-1. **Dockerization** *(completed)*: Containerize the **current** pytest smoke runner for local/CI parity (image builds deps + Chromium; `BASE_URL` / credentials stay env-injected). Local `Dockerfile` / `docker run` and the GitHub Actions **smoke** job both use the `aqe-smoke` image (Buildx + GHA cache; reports via `docker cp` → **`smoke-report`** artifact). Non-root `aqe` user and smoke-only env (`.env.smoke`) are in place. The full **test** job remains host Python by design for now (not a Phase 1 gap). Optional later polish (GHCR publish, pulling a prebuilt image instead of build-per-run) is **Phase 3 cache/speed** work — not unfinished Phase 1 wiring. For attaching services (DB, cache) in Actions jobs, see [reference/github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) (summary of [official docs](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers)).
+1. **Dockerization** *(completed)*: Containerize the **current** pytest smoke runner for local/CI parity (image builds deps + Chromium; `BASE_URL` / credentials stay env-injected). Local `Dockerfile` / `docker run` and the GitHub Actions **smoke** job both use the `fatf-smoke` image (Buildx + GHA cache; reports via `docker cp` → **`smoke-report`** artifact). Non-root `fatf` user and smoke-only env (`.env.smoke`) are in place. The full **test** job remains host Python by design for now (not a Phase 1 gap). Optional later polish (GHCR publish, pulling a prebuilt image instead of build-per-run) is **Phase 3 cache/speed** work — not unfinished Phase 1 wiring. For attaching services (DB, cache) in Actions jobs, see [reference/github-actions-docker-service-containers.md](reference/github-actions-docker-service-containers.md) (summary of [official docs](https://docs.github.com/en/actions/tutorials/use-containerized-services/use-docker-service-containers)).
 
 ### Phase 3 — CI/CD, observability & reporting *(next — demo priority)*
 3. **CI/CD quality gates & observability** *(in progress)*: Harden the pipeline beyond “tests + HTML artifact.” Docker-based **smoke** is already done in Phase 1 — do **not** re-scope it here. Target checklist:
